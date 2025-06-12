@@ -93,7 +93,13 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Certificate')),
+      appBar: AppBar(
+        title: const Text('Create Certificate'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -196,13 +202,12 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.category),
                           ),
-                          items:
-                              _certificateTypes.map((String type) {
-                                return DropdownMenuItem<String>(
-                                  value: type,
-                                  child: Text(type),
-                                );
-                              }).toList(),
+                          items: _certificateTypes.map((String type) {
+                            return DropdownMenuItem<String>(
+                              value: type,
+                              child: Text(type),
+                            );
+                          }).toList(),
                           onChanged: (String? newValue) {
                             setState(() {
                               _selectedType = newValue;
@@ -298,20 +303,18 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
                                   _filePath != null
                                       ? Icons.check_circle
                                       : Icons.upload_file,
-                                  color:
-                                      _filePath != null
-                                          ? Colors.green
-                                          : Colors.grey,
+                                  color: _filePath != null
+                                      ? Colors.green
+                                      : Colors.grey,
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
                                     _filePath ?? 'Upload PDF or Image',
                                     style: TextStyle(
-                                      color:
-                                          _filePath != null
-                                              ? Colors.black
-                                              : Colors.grey,
+                                      color: _filePath != null
+                                          ? Colors.black
+                                          : Colors.grey,
                                     ),
                                   ),
                                 ),
