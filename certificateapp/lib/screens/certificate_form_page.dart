@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import '../services/certificate_service.dart';
 
 class CertificateFormPage extends StatefulWidget {
   const CertificateFormPage({super.key});
@@ -14,12 +16,16 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
   final _nameController = TextEditingController();
   final _issuerController = TextEditingController();
   final _recipientController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final CertificateService _certificateService = CertificateService();
   DateTime? _issueDate;
   DateTime? _expiryDate;
   String? _selectedType;
   String? _certificateId;
   String? _filePath;
+  File? _selectedFile;
   bool _isUploading = false;
+  bool _isSaving = false;
 
   final List<String> _certificateTypes = [
     'Academic',
@@ -47,12 +53,13 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
       setState(() => _isUploading = true);
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
       );
 
       if (result != null) {
         setState(() {
           _filePath = result.files.single.name;
+          _selectedFile = File(result.files.single.path!);
         });
       }
     } catch (e) {
@@ -82,11 +89,76 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
     }
   }
 
+  Future<void> _saveCertificate() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please upload a certificate file')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      // Create description from form data
+      final description = '''
+Certificate: ${_nameController.text}
+Issuer: ${_issuerController.text}
+Recipient: ${_recipientController.text}
+Type: ${_selectedType}
+Issue Date: ${_issueDate?.toString().split(' ')[0] ?? 'Not specified'}
+Expiry Date: ${_expiryDate?.toString().split(' ')[0] ?? 'Not specified'}
+${_descriptionController.text.isNotEmpty ? 'Notes: ${_descriptionController.text}' : ''}
+      '''.trim();
+
+      // Add certificate using the service
+      final certificate = await _certificateService.addCertificate();
+      
+      if (certificate != null) {
+        // Update the certificate with form data
+        final updatedCertificate = certificate.copyWith(
+          fileName: _nameController.text,
+          description: description,
+          category: _selectedType,
+        );
+        
+        await _certificateService.updateCertificate(updatedCertificate);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Certificate created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true); // Return true to indicate success
+        }
+      } else {
+        throw Exception('Failed to save certificate');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating certificate: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _issuerController.dispose();
     _recipientController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -220,6 +292,16 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Additional Notes (Optional)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.note),
+                          ),
+                          maxLines: 3,
+                        ),
                       ],
                     ),
                   ),
@@ -246,7 +328,7 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
                           subtitle: Text(
                             _issueDate == null
                                 ? 'Select issue date'
-                                : '${_issueDate!.year}-${_issueDate!.month}-${_issueDate!.day}',
+                                : '${_issueDate!.year}-${_issueDate!.month.toString().padLeft(2, '0')}-${_issueDate!.day.toString().padLeft(2, '0')}',
                           ),
                           trailing: const Icon(
                             Icons.arrow_forward_ios,
@@ -261,7 +343,7 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
                           subtitle: Text(
                             _expiryDate == null
                                 ? 'Select expiry date'
-                                : '${_expiryDate!.year}-${_expiryDate!.month}-${_expiryDate!.day}',
+                                : '${_expiryDate!.year}-${_expiryDate!.month.toString().padLeft(2, '0')}-${_expiryDate!.day.toString().padLeft(2, '0')}',
                           ),
                           trailing: const Icon(
                             Icons.arrow_forward_ios,
@@ -337,32 +419,26 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      if (_filePath == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please upload a certificate file'),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _saveCertificate,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Create Certificate',
+                            style: TextStyle(fontSize: 16),
                           ),
-                        );
-                        return;
-                      }
-                      // TODO: Implement certificate creation
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Certificate created successfully!'),
-                        ),
-                      );
-                      Navigator.pop(context);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text(
-                    'Create Certificate',
-                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ],
