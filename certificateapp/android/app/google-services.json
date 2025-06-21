@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "640025676572",
+    "project_id": "mobile-certificate",
+    "storage_bucket": "mobile-certificate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640025676572:android:02eb335801e18ebc4808d9",
+        "android_client_info": {
+          "package_name": "com.example.certificateapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzt_FgN79X55hRuxMgIuDs_WmC1yXNIek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
