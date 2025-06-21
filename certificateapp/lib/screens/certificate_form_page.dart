@@ -49,25 +49,30 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
   }
 
   Future<void> _pickFile() async {
+    setState(() => _isUploading = true);
+    
     try {
-      setState(() => _isUploading = true);
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
       );
 
-      if (result != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
           _filePath = result.files.single.name;
           _selectedFile = File(result.files.single.path!);
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking file: $e')),
+        );
+      }
     } finally {
-      setState(() => _isUploading = false);
+      if (mounted) {
+        setState(() => _isUploading = false);
+      }
     }
   }
 
@@ -106,10 +111,10 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
 Certificate: ${_nameController.text}
 Issuer: ${_issuerController.text}
 Recipient: ${_recipientController.text}
-Type: ${_selectedType}
+Type: $_selectedType
 Issue Date: ${_issueDate?.toString().split(' ')[0] ?? 'Not specified'}
 Expiry Date: ${_expiryDate?.toString().split(' ')[0] ?? 'Not specified'}
-${_descriptionController.text.isNotEmpty ? 'Notes: ${_descriptionController.text}' : ''}
+${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text' : ''}
       '''.trim();
 
       // Add certificate using the service

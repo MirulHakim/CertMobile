@@ -73,7 +73,7 @@ class CertificateService {
       }
       return null;
     } catch (e) {
-      print('Error adding certificate: $e');
+      // Error adding certificate
       return null;
     }
   }
@@ -102,7 +102,7 @@ class CertificateService {
       }
       return false;
     } catch (e) {
-      print('Error deleting certificate: $e');
+      // Error deleting certificate
       return false;
     }
   }
@@ -112,7 +112,7 @@ class CertificateService {
       await _databaseHelper.updateCertificate(certificate);
       return true;
     } catch (e) {
-      print('Error updating certificate: $e');
+      // Error updating certificate
       return false;
     }
   }
@@ -136,7 +136,7 @@ class CertificateService {
       }
       return null;
     } catch (e) {
-      print('Error getting certificate file: $e');
+      // Error getting certificate file
       return null;
     }
   }

@@ -30,7 +30,7 @@ class ProfilePage extends StatelessWidget {
                   CircleAvatar(
                     radius: 50,
                     backgroundColor:
-                        Theme.of(context).primaryColor.withOpacity(0.1),
+                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     child: Icon(
                       Icons.person,
                       size: 50,
