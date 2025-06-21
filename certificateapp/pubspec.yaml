@@ -45,6 +45,7 @@ dependencies:
   
   # File sharing dependency
   share_plus: ^7.2.1
+  firebase_core: ^3.14.0
 
 dev_dependencies:
   flutter_test:
