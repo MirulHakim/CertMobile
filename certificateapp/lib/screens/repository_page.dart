@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/certificate.dart';
 import '../services/certificate_service.dart';
+import '../widgets/custom_navigation_bar.dart';
+import 'home_page.dart';
+import 'dashboard_page.dart';
+import 'profile_page.dart';
 
 class RepositoryPage extends StatefulWidget {
   const RepositoryPage({super.key});
@@ -58,8 +62,10 @@ class _RepositoryPageState extends State<RepositoryPage> {
       } else {
         _filteredCertificates = _certificates.where((cert) {
           return cert.fileName.toLowerCase().contains(query.toLowerCase()) ||
-                 (cert.description?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-                 (cert.category?.toLowerCase().contains(query.toLowerCase()) ?? false);
+              (cert.description?.toLowerCase().contains(query.toLowerCase()) ??
+                  false) ||
+              (cert.category?.toLowerCase().contains(query.toLowerCase()) ??
+                  false);
         }).toList();
       }
     });
@@ -82,7 +88,8 @@ class _RepositoryPageState extends State<RepositoryPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Certificate'),
-        content: Text('Are you sure you want to delete "${certificate.fileName}"?'),
+        content:
+            Text('Are you sure you want to delete "${certificate.fileName}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -99,7 +106,8 @@ class _RepositoryPageState extends State<RepositoryPage> {
 
     if (confirmed == true) {
       try {
-        final success = await _certificateService.deleteCertificate(certificate.id!);
+        final success =
+            await _certificateService.deleteCertificate(certificate.id!);
         if (success) {
           await _loadCertificates();
           _showSuccessSnackBar('Certificate deleted successfully!');
@@ -235,6 +243,26 @@ class _RepositoryPageState extends State<RepositoryPage> {
           ),
         ],
       ),
+      bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: 2,
+        onDestinationSelected: (index) {
+          if (index == 0) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          } else if (index == 1) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const DashboardPage()),
+            );
+          } else if (index == 2) {
+            // Already on Repository
+          } else if (index == 3) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const ProfilePage()),
+            );
+          }
+        },
+      ),
     );
   }
 }
@@ -269,7 +297,8 @@ class CertificateCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getFileTypeColor(certificate.fileType).withOpacity(0.1),
+                  color:
+                      _getFileTypeColor(certificate.fileType).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -303,7 +332,8 @@ class CertificateCard extends StatelessWidget {
                     if (certificate.category != null) ...[
                       const SizedBox(height: 2),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.blue.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -395,7 +425,8 @@ class CertificateDetailsSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getFileTypeColor(certificate.fileType).withOpacity(0.1),
+                  color:
+                      _getFileTypeColor(certificate.fileType).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -430,7 +461,8 @@ class CertificateDetailsSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _buildDetailRow('File Size', certificate.formattedFileSize),
-          _buildDetailRow('Upload Date', DateFormat('MMM dd, yyyy HH:mm').format(certificate.uploadDate)),
+          _buildDetailRow('Upload Date',
+              DateFormat('MMM dd, yyyy HH:mm').format(certificate.uploadDate)),
           if (certificate.category != null)
             _buildDetailRow('Category', certificate.category!),
           if (certificate.description != null)

@@ -22,6 +22,11 @@ class CustomNavigationBar extends StatelessWidget {
           label: 'Home',
         ),
         NavigationDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: 'Dashboard',
+        ),
+        NavigationDestination(
           icon: Icon(Icons.folder_outlined),
           selectedIcon: Icon(Icons.folder),
           label: 'Repository',

@@ -80,12 +80,22 @@ class RegistrationPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 32),
                     const Text(
-                      'Welcome!',
+                      'Get Started!',
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Your digital certificates, organized and secure.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
                     // Register with Google button

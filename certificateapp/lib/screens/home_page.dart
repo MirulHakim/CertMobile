@@ -5,6 +5,7 @@ import 'profile_page.dart';
 import '../widgets/custom_navigation_bar.dart';
 import '../models/certificate.dart';
 import '../services/certificate_service.dart';
+import 'dashboard_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,14 +19,38 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const CertificateListPage(),
+    const DashboardPage(),
     const RepositoryPage(),
     const ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
+    if (_selectedIndex == index) return;
     setState(() {
       _selectedIndex = index;
     });
+    // Navigation logic for Home and Dashboard
+    if (index == 0) {
+      // Home
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } else if (index == 1) {
+      // Dashboard
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const DashboardPage()),
+      );
+    } else if (index == 2) {
+      // Repository
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const RepositoryPage()),
+      );
+    } else if (index == 3) {
+      // Profile
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const ProfilePage()),
+      );
+    }
   }
 
   @override

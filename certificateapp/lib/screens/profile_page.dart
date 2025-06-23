@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
+import '../widgets/custom_navigation_bar.dart';
+import 'home_page.dart';
+import 'dashboard_page.dart';
+import 'repository_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -159,6 +163,26 @@ class ProfilePage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: 3,
+        onDestinationSelected: (index) {
+          if (index == 0) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          } else if (index == 1) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const DashboardPage()),
+            );
+          } else if (index == 2) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const RepositoryPage()),
+            );
+          } else if (index == 3) {
+            // Already on Profile
+          }
+        },
       ),
     );
   }
