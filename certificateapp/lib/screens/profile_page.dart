@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -130,6 +131,12 @@ class ProfilePage extends StatelessWidget {
                                 onPressed: () {
                                   Navigator.pop(context);
                                   // TODO: Perform logout
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginPage(),
+                                    ),
+                                    (route) => false,
+                                  );
                                 },
                                 child: const Text('Logout'),
                               ),
