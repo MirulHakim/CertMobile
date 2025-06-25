@@ -2,8 +2,35 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'welcome_page.dart';
 
-class RegistrationPage extends StatelessWidget {
+class RegistrationPage extends StatefulWidget {
   const RegistrationPage({Key? key}) : super(key: key);
+
+  @override
+  State<RegistrationPage> createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _orgController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _customRoleController = TextEditingController();
+
+  String? _selectedRole;
+  final List<String> _roles = [
+    'Certificate Authorities (CAs)',
+    'Recipients',
+    'Other',
+  ];
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _orgController.dispose();
+    _phoneController.dispose();
+    _customRoleController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,16 +107,16 @@ class RegistrationPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 32),
                     const Text(
-                      'Get Started!',
+                      'Register Account',
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
-                      'Your digital certificates, organized and secure.',
+                      'Fill in your details to get started.',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.black54,
@@ -98,38 +125,145 @@ class RegistrationPage extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
-                    // Register with Google button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: Icon(Icons.account_circle,
-                            color: Colors.red, size: 26),
-                        label: const Text(
-                          'Register with Google',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(32),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Full Name
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              labelText: 'Full Name',
+                              prefixIcon: const Icon(Icons.person_outline),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter your full name';
+                              }
+                              return null;
+                            },
                           ),
-                          elevation: 0,
-                          foregroundColor: Colors.black87,
-                          backgroundColor: null,
-                        ).copyWith(
-                          backgroundColor:
-                              MaterialStateProperty.resolveWith<Color?>(
-                            (states) => null,
+                          const SizedBox(height: 18),
+                          // Role Dropdown
+                          DropdownButtonFormField<String>(
+                            value: _selectedRole,
+                            items: _roles
+                                .map((role) => DropdownMenuItem(
+                                      value: role,
+                                      child: Text(role),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedRole = value;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              labelText: 'Role',
+                              prefixIcon: const Icon(Icons.badge_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select your role';
+                              }
+                              return null;
+                            },
                           ),
-                          // Use gradient background
-                          shadowColor:
-                              MaterialStateProperty.all(Colors.transparent),
-                        ),
+                          if (_selectedRole == 'Other') ...[
+                            const SizedBox(height: 18),
+                            TextFormField(
+                              controller: _customRoleController,
+                              decoration: InputDecoration(
+                                labelText: 'Custom Role',
+                                prefixIcon: const Icon(Icons.edit_outlined),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (_selectedRole == 'Other' &&
+                                    (value == null || value.trim().isEmpty)) {
+                                  return 'Please specify your role';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                          const SizedBox(height: 18),
+                          // Organization (optional)
+                          TextFormField(
+                            controller: _orgController,
+                            decoration: InputDecoration(
+                              labelText: 'Organization (optional)',
+                              prefixIcon: const Icon(Icons.business_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          // Phone Number
+                          TextFormField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              labelText: 'Phone Number',
+                              prefixIcon: const Icon(Icons.phone_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter your phone number';
+                              }
+                              // Simple phone validation
+                              if (!RegExp(r'^[0-9+\-() ]{7,}$')
+                                  .hasMatch(value)) {
+                                return 'Enter a valid phone number';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 28),
+                          // Submit Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 54,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  // TODO: Handle registration logic
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text('Registration submitted!')),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accentColor,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(32),
+                                ),
+                                elevation: 2,
+                                textStyle: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              child: const Text('Register'),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 32),
