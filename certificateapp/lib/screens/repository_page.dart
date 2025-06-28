@@ -8,6 +8,7 @@ import 'dart:io';
 import '../models/certificate.dart';
 import '../services/certificate_service.dart';
 import 'certificate_form_page.dart';
+import 'package:share_plus/share_plus.dart';
 
 class RepositoryPage extends StatefulWidget {
   const RepositoryPage({super.key});
@@ -517,6 +518,24 @@ class CertificateDetailsSheet extends StatelessWidget {
                 icon: const Icon(Icons.download),
                 label: const Text('Download/View PDF'),
                 style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final url = certificate.fileUrl!;
+                  await Share.share('Here is the certificate PDF link: $url');
+                },
+                icon: const Icon(Icons.share),
+                label: const Text('Share PDF Link'),
+                style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
