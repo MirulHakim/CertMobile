@@ -36,6 +36,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final List<String> _roles = [
     'Certificate Authorities (CAs)',
     'Recipients',
+    'Client',
     'Other',
   ];
 

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/certificate.dart';
 import '../services/certificate_service.dart';
-import '../widgets/custom_navigation_bar.dart';
-import 'home_page.dart';
-import 'dashboard_page.dart';
-import 'profile_page.dart';
 
 class RepositoryPage extends StatefulWidget {
   const RepositoryPage({super.key});
@@ -242,26 +238,6 @@ class _RepositoryPageState extends State<RepositoryPage> {
                       ),
           ),
         ],
-      ),
-      bottomNavigationBar: CustomNavigationBar(
-        selectedIndex: 2,
-        onDestinationSelected: (index) {
-          if (index == 0) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          } else if (index == 1) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const DashboardPage()),
-            );
-          } else if (index == 2) {
-            // Already on Repository
-          } else if (index == 3) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const ProfilePage()),
-            );
-          }
-        },
       ),
     );
   }

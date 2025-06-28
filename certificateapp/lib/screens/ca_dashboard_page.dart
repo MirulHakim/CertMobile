@@ -149,55 +149,26 @@ class _CADashboardPageState extends State<CADashboardPage> {
                       children: [
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.add_circle_outline,
-                            label: 'Issue Certificate',
-                            color: Colors.green,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CertificateFormPage(),
-                                ),
-                              );
-                              if (result == true && mounted) {
-                                _loadData();
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _DashboardAction(
-                            icon: Icons.verified_user_outlined,
-                            label: 'Verify Certificate',
+                            icon: Icons.assignment,
+                            label: 'Certificate Requests',
                             color: Colors.blue,
                             onTap: () {
-                              // TODO: Implement certificate verification
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Certificate verification coming soon!'),
-                                ),
-                              );
+                              // TODO: Navigate to Certificate Requests page
                             },
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
+                        const SizedBox(width: 16),
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.people_outline,
-                            label: 'Manage Users',
-                            color: Colors.orange,
+                            icon: Icons.verified,
+                            label: 'Issued Certificates',
+                            color: Colors.green,
                             onTap: () {
-                              // TODO: Implement user management
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('User management coming soon!'),
+                              // TODO: Navigate to Issued Certificates page (RepositoryPage for now)
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RepositoryPage(),
                                 ),
                               );
                             },
@@ -206,16 +177,11 @@ class _CADashboardPageState extends State<CADashboardPage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.analytics_outlined,
-                            label: 'Analytics',
-                            color: Colors.purple,
+                            icon: Icons.file_upload,
+                            label: 'True Copy Requests',
+                            color: Colors.orange,
                             onTap: () {
-                              // TODO: Implement analytics
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Analytics coming soon!'),
-                                ),
-                              );
+                              // TODO: Navigate to True Copy Requests page
                             },
                           ),
                         ),

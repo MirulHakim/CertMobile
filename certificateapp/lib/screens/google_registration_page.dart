@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/google_auth_service.dart';
-import 'home_page.dart';
 import '../main.dart';
 
 class GoogleRegistrationPage extends StatefulWidget {
@@ -33,6 +32,7 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
   final List<String> _roles = [
     'Certificate Authorities (CAs)',
     'Recipients',
+    'Client',
     'Admin',
     'Other',
   ];
