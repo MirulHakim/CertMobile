@@ -37,6 +37,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     'Certificate Authorities (CAs)',
     'Recipients',
     'Client',
+    'Admin',
     'Other',
   ];
 
