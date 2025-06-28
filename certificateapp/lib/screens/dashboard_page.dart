@@ -3,6 +3,7 @@ import '../widgets/custom_navigation_bar.dart';
 import 'home_page.dart';
 import 'repository_page.dart';
 import 'profile_page.dart';
+import 'certificate_form_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -47,12 +48,29 @@ class DashboardPage extends StatelessWidget {
                 _DashboardAction(
                   icon: Icons.add_circle_outline,
                   label: 'Add Certificate',
-                  onTap: () {},
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const CertificateFormPage()),
+                    );
+                    if (result == true) {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                            builder: (context) => const RepositoryPage()),
+                      );
+                    }
+                  },
                 ),
                 _DashboardAction(
                   icon: Icons.folder_open,
                   label: 'Repository',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                          builder: (context) => const RepositoryPage()),
+                    );
+                  },
                 ),
                 _DashboardAction(
                   icon: Icons.person,

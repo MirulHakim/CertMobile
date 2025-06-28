@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import '../services/certificate_service.dart';
+import 'package:read_pdf_text/read_pdf_text.dart';
 
 class CertificateFormPage extends StatefulWidget {
   const CertificateFormPage({super.key});
@@ -50,18 +51,29 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
 
   Future<void> _pickFile() async {
     setState(() => _isUploading = true);
-    
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
       );
-
       if (result != null && result.files.isNotEmpty) {
         setState(() {
           _filePath = result.files.single.name;
           _selectedFile = File(result.files.single.path!);
         });
+        // If PDF, extract text and autofill fields
+        if (_filePath != null && _filePath!.toLowerCase().endsWith('.pdf')) {
+          try {
+            String text = await ReadPdfText.getPDFtext(_selectedFile!.path);
+            _autofillFromPdfText(text);
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to extract PDF text: $e')),
+              );
+            }
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -74,6 +86,43 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
         setState(() => _isUploading = false);
       }
     }
+  }
+
+  void _autofillFromPdfText(String text) {
+    // Simple regex-based extraction for fields like 'Certificate Name:', 'Issuer:', etc.
+    String? getField(String label) {
+      final regex = RegExp('$label\s*:\s*(.*)', caseSensitive: false);
+      final match = regex.firstMatch(text);
+      return match != null ? match.group(1)?.trim() : null;
+    }
+
+    final certName = getField('Certificate Name') ?? getField('Certificate');
+    final issuer = getField('Issuer');
+    final recipient = getField('Recipient');
+    final type = getField('Type');
+    final notes = getField('Notes');
+    final issueDate = getField('Issue Date');
+    final expiryDate = getField('Expiry Date');
+
+    setState(() {
+      if (certName != null && certName.isNotEmpty)
+        _nameController.text = certName;
+      if (issuer != null && issuer.isNotEmpty) _issuerController.text = issuer;
+      if (recipient != null && recipient.isNotEmpty)
+        _recipientController.text = recipient;
+      if (type != null && type.isNotEmpty && _certificateTypes.contains(type))
+        _selectedType = type;
+      if (notes != null && notes.isNotEmpty)
+        _descriptionController.text = notes;
+      if (issueDate != null && issueDate.isNotEmpty) {
+        final parsed = DateTime.tryParse(issueDate);
+        if (parsed != null) _issueDate = parsed;
+      }
+      if (expiryDate != null && expiryDate.isNotEmpty) {
+        final parsed = DateTime.tryParse(expiryDate);
+        if (parsed != null) _expiryDate = parsed;
+      }
+    });
   }
 
   Future<void> _selectDate(BuildContext context, bool isIssueDate) async {
@@ -106,7 +155,14 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
     setState(() => _isSaving = true);
 
     try {
-      // Create description from form data
+      // Upload file to Firebase Storage
+      final firebaseResult = await _certificateService.uploadFileToFirebase(
+          _selectedFile!, _filePath!);
+      if (firebaseResult == null) {
+        throw Exception('Failed to upload file to Firebase Storage');
+      }
+
+      // Continue with local save as before
       final description = '''
 Certificate: ${_nameController.text}
 Issuer: ${_issuerController.text}
@@ -115,25 +171,25 @@ Type: $_selectedType
 Issue Date: ${_issueDate?.toString().split(' ')[0] ?? 'Not specified'}
 Expiry Date: ${_expiryDate?.toString().split(' ')[0] ?? 'Not specified'}
 ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text' : ''}
-      '''.trim();
+      '''
+          .trim();
 
-      // Add certificate using the service
       final certificate = await _certificateService.addCertificate();
-      
+
       if (certificate != null) {
-        // Update the certificate with form data
         final updatedCertificate = certificate.copyWith(
           fileName: _nameController.text,
           description: description,
           category: _selectedType,
         );
-        
+
         await _certificateService.updateCertificate(updatedCertificate);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Certificate created successfully!'),
+              content:
+                  Text('Certificate created and file uploaded to Firebase!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -437,7 +493,8 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(

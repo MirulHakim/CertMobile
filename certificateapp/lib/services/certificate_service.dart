@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../models/certificate.dart';
 import 'database_helper.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class CertificateService {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
@@ -30,7 +31,7 @@ class CertificateService {
         final fileName = result.files.single.name;
         final fileSize = await file.length();
         final fileExtension = path.extension(fileName).toLowerCase();
-        
+
         // Determine file type
         String fileType;
         switch (fileExtension) {
@@ -52,7 +53,8 @@ class CertificateService {
 
         // Copy file to app directory
         final certDir = await _getCertificateDirectory();
-        final uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}_$fileName';
+        final uniqueFileName =
+            '${DateTime.now().millisecondsSinceEpoch}_$fileName';
         final newFilePath = path.join(certDir, uniqueFileName);
         await file.copy(newFilePath);
 
@@ -63,7 +65,8 @@ class CertificateService {
           fileType: fileType,
           fileSize: fileSize.toDouble(),
           uploadDate: DateTime.now(),
-          description: 'Certificate uploaded on ${DateTime.now().toString().split(' ')[0]}',
+          description:
+              'Certificate uploaded on ${DateTime.now().toString().split(' ')[0]}',
           category: 'General',
         );
 
@@ -95,7 +98,7 @@ class CertificateService {
         if (await file.exists()) {
           await file.delete();
         }
-        
+
         // Delete from database
         await _databaseHelper.deleteCertificate(id);
         return true;
@@ -140,4 +143,16 @@ class CertificateService {
       return null;
     }
   }
-} 
+
+  Future<String?> uploadFileToFirebase(File file, String fileName) async {
+    try {
+      final storageRef =
+          FirebaseStorage.instance.ref().child('certificates/$fileName');
+      final uploadTask = await storageRef.putFile(file);
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      return null;
+    }
+  }
+}

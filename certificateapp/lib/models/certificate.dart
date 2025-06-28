@@ -7,6 +7,7 @@ class Certificate {
   final DateTime uploadDate;
   final String? description;
   final String? category;
+  final String? firebaseUrl;
 
   Certificate({
     this.id,
@@ -17,6 +18,7 @@ class Certificate {
     required this.uploadDate,
     this.description,
     this.category,
+    this.firebaseUrl,
   });
 
   Certificate copyWith({
@@ -28,6 +30,7 @@ class Certificate {
     DateTime? uploadDate,
     String? description,
     String? category,
+    String? firebaseUrl,
   }) {
     return Certificate(
       id: id ?? this.id,
@@ -38,6 +41,7 @@ class Certificate {
       uploadDate: uploadDate ?? this.uploadDate,
       description: description ?? this.description,
       category: category ?? this.category,
+      firebaseUrl: firebaseUrl ?? this.firebaseUrl,
     );
   }
 
@@ -51,6 +55,7 @@ class Certificate {
       'uploadDate': uploadDate.toIso8601String(),
       'description': description,
       'category': category,
+      'firebaseUrl': firebaseUrl,
     };
   }
 
@@ -64,6 +69,7 @@ class Certificate {
       uploadDate: DateTime.parse(map['uploadDate']),
       description: map['description'],
       category: map['category'],
+      firebaseUrl: map['firebaseUrl'],
     );
   }
 
@@ -76,4 +82,4 @@ class Certificate {
       return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
     }
   }
-} 
+}

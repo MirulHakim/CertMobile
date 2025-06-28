@@ -49,6 +49,10 @@ dependencies:
   firebase_auth: ^5.6.0
   google_sign_in: ^7.0.0
   cloud_firestore: ^5.6.9
+  firebase_storage: ^12.4.7
+
+  # Added from the code block
+  read_pdf_text: ^0.3.1
 
 dev_dependencies:
   flutter_test:
