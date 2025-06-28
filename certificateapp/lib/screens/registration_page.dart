@@ -58,7 +58,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       });
 
       try {
-        print('Starting registration process...');
+        debugPrint('Starting registration process...');
         // Create user with email and password
         final userCredential =
             await _authService.createUserWithEmailAndPassword(
@@ -66,7 +66,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           _passwordController.text,
         );
 
-        print('User created successfully: ${userCredential.user?.uid}');
+        debugPrint('User created successfully: \\${userCredential.user?.uid}');
 
         // Update user profile with additional information
         await _authService.updateUserProfile(
@@ -78,10 +78,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
           organization: _orgController.text.trim().isEmpty
               ? null
               : _orgController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
+          phoneNumber: _phoneController.text.trim().isEmpty
+              ? null
+              : _phoneController.text.trim(),
         );
 
-        print('User profile updated successfully');
+        debugPrint('User profile updated successfully');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +104,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           }
         }
       } catch (e) {
-        print('Registration error: $e');
+        debugPrint('Registration error: $e');
         if (mounted) {
           String errorMessage = 'Registration failed. Please try again.';
 
@@ -251,7 +253,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             top: 24,
             left: 8,
             child: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new_rounded,
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white, size: 28),
               onPressed: () {
                 Navigator.of(context).pushAndRemoveUntil(

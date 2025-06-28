@@ -37,15 +37,15 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       try {
-        print(
+        debugPrint(
             'Attempting to login with email: ${_emailController.text.trim()}');
         final userCredential = await _authService.signInWithEmailAndPassword(
           _emailController.text.trim(),
           _passwordController.text,
         );
 
-        print('Login successful! User ID: ${userCredential.user?.uid}');
-        print('User email: ${userCredential.user?.email}');
+        debugPrint('Login successful! User ID: ${userCredential.user?.uid}');
+        debugPrint('User email: ${userCredential.user?.email}');
 
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
           }
         }
       } catch (e) {
-        print('Login error: $e');
+        debugPrint('Login error: $e');
         if (mounted) {
           String errorMessage = 'Login failed. Please try again.';
 
@@ -347,7 +347,7 @@ class _LoginPageState extends State<LoginPage> {
                         color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.verified_user,
                         size: 80,
                         color: Colors.white,

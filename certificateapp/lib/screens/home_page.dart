@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'certificate_form_page.dart';
 import 'repository_page.dart';
 import 'profile_page.dart';
@@ -40,10 +39,10 @@ class _HomePageState extends State<HomePage> {
       final user = _authService.currentUser;
       if (user != null) {
         _userProfile = await _authService.getUserProfile(user.uid);
-        print('User role: ${_userProfile?['role']}');
+        debugPrint('User role: ${_userProfile?['role']}');
       }
     } catch (e) {
-      print('Error loading user profile: $e');
+      debugPrint('Error loading user profile: $e');
     } finally {
       if (mounted) {
         setState(() {
