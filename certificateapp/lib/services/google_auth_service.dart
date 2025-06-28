@@ -13,36 +13,48 @@ class GoogleAuthService {
   // Sign in or register with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Sign out from Google first to allow account selection
-      await _googleSignIn.signOut();
+      print('GoogleAuthService: Starting Google Sign-In process...');
 
+      // Get Google Sign-In account
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
       if (googleUser == null) {
-        // User cancelled the sign-in
+        print('GoogleAuthService: User cancelled the sign-in');
         return null;
       }
 
+      print('GoogleAuthService: Google user selected: ${googleUser.email}');
+
+      print('GoogleAuthService: Getting authentication...');
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+
+      print('GoogleAuthService: Creating credential...');
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
+      print('GoogleAuthService: Signing in with Firebase...');
       final userCredential = await _auth.signInWithCredential(credential);
+      print('GoogleAuthService: Firebase sign-in successful');
 
       // Check if this is a new user
       if (userCredential.additionalUserInfo?.isNewUser == true) {
+        print('GoogleAuthService: New user detected, creating profile...');
         // Create basic profile for new Google users
         await _createBasicGoogleUserProfile(userCredential.user!);
       } else {
+        print('GoogleAuthService: Existing user, updating last login...');
         // Update last login for existing users
         await updateLastLogin(userCredential.user!.uid);
       }
 
+      print('GoogleAuthService: Google Sign-In process completed successfully');
       return userCredential;
     } catch (e) {
-      print('Google Sign-In error: $e');
+      print('GoogleAuthService: Error during Google Sign-In: $e');
+      print('GoogleAuthService: Error type: ${e.runtimeType}');
       rethrow;
     }
   }
@@ -85,33 +97,44 @@ class GoogleAuthService {
   // Sign out from Google
   Future<void> signOut() async {
     try {
-      print('GoogleAuthService: Starting Google Sign-In sign out...');
+      print('GoogleAuthService: Starting sign out process...');
 
-      // Check if user is currently signed in with Google
+      // First, sign out from Firebase Auth
+      if (_auth.currentUser != null) {
+        print('GoogleAuthService: Signing out from Firebase Auth...');
+        await _auth.signOut();
+        print('GoogleAuthService: Firebase Auth sign out completed');
+      } else {
+        print('GoogleAuthService: No Firebase user to sign out');
+      }
+
+      // Then, sign out from Google Sign-In
       final isSignedIn = await _googleSignIn.isSignedIn();
       print(
           'GoogleAuthService: Is currently signed in with Google: $isSignedIn');
 
       if (isSignedIn) {
-        // Sign out from Google Sign-In
+        print('GoogleAuthService: Signing out from Google Sign-In...');
         await _googleSignIn.signOut();
         print('GoogleAuthService: Google Sign-In signed out successfully');
+
+        // Try to disconnect the account to clear cache (with error handling)
+        try {
+          await _googleSignIn.disconnect();
+          print('GoogleAuthService: Google Sign-In disconnected successfully');
+        } catch (disconnectError) {
+          print(
+              'GoogleAuthService: Disconnect failed (this is normal): $disconnectError');
+          // Disconnect failure is not critical, continue with sign out
+        }
       } else {
         print('GoogleAuthService: User was not signed in with Google');
       }
 
-      // Also check Firebase Auth state
-      if (_auth.currentUser != null) {
-        print(
-            'GoogleAuthService: Firebase user still exists: ${_auth.currentUser?.email}');
-      } else {
-        print('GoogleAuthService: No Firebase user found');
-      }
-
-      print('GoogleAuthService: Complete sign out process finished');
+      print('GoogleAuthService: Sign out process finished');
     } catch (e) {
-      print('GoogleAuthService: Error signing out from Google: $e');
-      rethrow;
+      print('GoogleAuthService: Error during sign out: $e');
+      // Don't rethrow - sign out should be graceful even if some steps fail
     }
   }
 
@@ -138,11 +161,66 @@ class GoogleAuthService {
   // Force account selection by signing out and signing in again
   Future<UserCredential?> signInWithGoogleForceSelection() async {
     try {
-      // Always sign out first to force account selection
-      await _googleSignIn.signOut();
+      print('GoogleAuthService: Force selection - signing out completely...');
+
+      // Sign out from both Firebase and Google
+      await signOut();
+
+      // Add a longer delay to ensure complete cleanup
+      await Future.delayed(const Duration(seconds: 1));
+
+      print('GoogleAuthService: Force selection - attempting fresh sign-in...');
       return await signInWithGoogle();
     } catch (e) {
-      print('Force Google Sign-In error: $e');
+      print('GoogleAuthService: Force Google Sign-In error: $e');
+      rethrow;
+    }
+  }
+
+  // Force fresh sign-in by completely clearing all states
+  Future<UserCredential?> forceFreshSignIn() async {
+    try {
+      print('GoogleAuthService: Force fresh sign-in - clearing all states...');
+
+      // Sign out from both services
+      await signOut();
+
+      // Add delay for complete cleanup
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Force Google Sign-In to show account picker
+      print(
+          'GoogleAuthService: Force fresh sign-in - showing account picker...');
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        print('GoogleAuthService: Force fresh sign-in - user cancelled');
+        return null;
+      }
+
+      print(
+          'GoogleAuthService: Force fresh sign-in - user selected: ${googleUser.email}');
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      print('GoogleAuthService: Force fresh sign-in - successful');
+
+      // Handle new/existing user logic
+      if (userCredential.additionalUserInfo?.isNewUser == true) {
+        await _createBasicGoogleUserProfile(userCredential.user!);
+      } else {
+        await updateLastLogin(userCredential.user!.uid);
+      }
+
+      return userCredential;
+    } catch (e) {
+      print('GoogleAuthService: Force fresh sign-in error: $e');
       rethrow;
     }
   }

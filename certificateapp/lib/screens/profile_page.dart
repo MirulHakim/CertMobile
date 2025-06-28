@@ -62,6 +62,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _handleLogout() async {
     try {
+      print('ProfilePage: Starting logout process...');
+
       // Show loading indicator
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -75,6 +77,8 @@ class _ProfilePageState extends State<ProfilePage> {
       // Sign out from all services
       await _authService.signOut();
 
+      print('ProfilePage: Logout completed successfully');
+
       if (mounted) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,19 +88,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
 
-        // Force navigation to welcome page after a brief delay
-        await Future.delayed(const Duration(milliseconds: 800));
-
-        if (mounted) {
-          // Clear all navigation stack and go to welcome page
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const WelcomePage()),
-            (route) => false,
-          );
-        }
+        // AuthWrapper will automatically detect the sign-out and navigate to WelcomePage
+        // No need for manual navigation
       }
     } catch (e) {
-      print('Logout error: $e');
+      print('ProfilePage: Logout error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
