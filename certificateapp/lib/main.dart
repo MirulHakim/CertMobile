@@ -8,6 +8,7 @@ import 'screens/google_registration_page.dart';
 import 'screens/ca_dashboard_page.dart';
 import 'screens/recipient_dashboard_page.dart';
 import 'screens/client_dashboard_page.dart';
+import 'screens/admin_dashboard_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +97,8 @@ class AuthWrapper extends StatelessWidget {
         return const CADashboardPage();
       } else if (role == 'client') {
         return const ClientDashboardPage();
+      } else if (role == 'admin') {
+        return const AdminDashboardPage();
       } else {
         return const RecipientDashboardPage(); // Default to recipient dashboard
       }
