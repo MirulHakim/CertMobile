@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../services/google_auth_service.dart';
 import 'home_page.dart';
 import 'registration_page.dart';
 import 'welcome_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,8 +17,11 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
+  final _googleAuthService = GoogleAuthService();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _isGoogleSigningIn = false;
 
   @override
   void dispose() {
@@ -30,18 +36,267 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
-      // Simulate login process
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        print(
+            'Attempting to login with email: ${_emailController.text.trim()}');
+        final userCredential = await _authService.signInWithEmailAndPassword(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
 
-      setState(() {
-        _isLoading = false;
-      });
+        print('Login successful! User ID: ${userCredential.user?.uid}');
+        print('User email: ${userCredential.user?.email}');
 
-      // Navigate to home page
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        if (userDoc.exists && userDoc.data()?['role'] != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Login successful!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            await Future.delayed(const Duration(milliseconds: 500));
+
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const HomePage()),
+                (route) => false,
+              );
+            }
+          }
+        } else {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Account Not Registered'),
+                content: const Text(
+                  'This account is not registered in our system. Please register first before signing in.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => const WelcomePage()),
+                        (route) => false,
+                      );
+                    },
+                    child: const Text('Go to Registration'),
+                  ),
+                ],
+              ),
+            );
+            await _authService.signOut();
+          }
+        }
+      } catch (e) {
+        print('Login error: $e');
+        if (mounted) {
+          String errorMessage = 'Login failed. Please try again.';
+
+          if (e.toString().contains('user-not-found')) {
+            errorMessage = 'No user found with this email address.';
+          } else if (e.toString().contains('wrong-password')) {
+            errorMessage = 'Incorrect password.';
+          } else if (e.toString().contains('invalid-email')) {
+            errorMessage = 'Invalid email address.';
+          } else if (e.toString().contains('user-disabled')) {
+            errorMessage = 'This account has been disabled.';
+          } else if (e.toString().contains('too-many-requests')) {
+            errorMessage = 'Too many failed attempts. Please try again later.';
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isGoogleSigningIn = true;
+    });
+
+    try {
+      final userCredential = await _googleAuthService.signInWithGoogle();
+
+      if (userCredential != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        if (userDoc.exists) {
+          final userData = userDoc.data()!;
+          final registrationCompleted =
+              userData['registrationCompleted'] ?? false;
+          final role = userData['role'];
+
+          if (registrationCompleted && role != null) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Signed in with Google!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Account Not Registered'),
+                  content: const Text(
+                    'This Google account is not registered in our system. Please go to the welcome page to register your account first.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (context) => const WelcomePage()),
+                          (route) => false,
+                        );
+                      },
+                      child: const Text('Go to Registration'),
+                    ),
+                  ],
+                ),
+              );
+              await _authService.signOut();
+            }
+          }
+        } else {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Account Not Registered'),
+                content: const Text(
+                  'This Google account is not registered in our system. Please go to the welcome page to register your account first.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => const WelcomePage()),
+                        (route) => false,
+                      );
+                    },
+                    child: const Text('Go to Registration'),
+                  ),
+                ],
+              ),
+            );
+            await _authService.signOut();
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Google Sign-In was cancelled'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+        String errorMessage = 'Google Sign-In failed. Please try again.';
+        if (e.toString().contains('network_error')) {
+          errorMessage =
+              'Network error. Please check your internet connection.';
+        } else if (e.toString().contains('sign_in_canceled')) {
+          errorMessage = 'Sign-in was cancelled.';
+        } else if (e.toString().contains('sign_in_failed')) {
+          errorMessage = 'Sign-in failed. Please try again.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleSigningIn = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email address first.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await _authService.resetPassword(_emailController.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset email sent! Check your inbox.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending reset email: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -64,7 +319,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          // Back button
           Positioned(
             top: 24,
             left: 8,
@@ -87,7 +341,6 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo and Title
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -118,7 +371,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 48),
-                    // Login Form
                     Card(
                       elevation: 8,
                       shape: RoundedRectangleBorder(
@@ -175,12 +427,12 @@ class _LoginPageState extends State<LoginPage> {
                                 obscureText: !_isPasswordVisible,
                                 decoration: InputDecoration(
                                   labelText: 'Password',
-                                  prefixIcon: const Icon(Icons.lock_outlined),
+                                  prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _isPasswordVisible
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -237,10 +489,71 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               const SizedBox(height: 16),
                               TextButton(
-                                onPressed: () {
-                                  // TODO: Implement forgot password
-                                },
+                                onPressed: _handleForgotPassword,
                                 child: const Text('Forgot Password?'),
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                children: [
+                                  Expanded(
+                                      child: Divider(color: Colors.grey[300])),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: Text(
+                                      'OR',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                      child: Divider(color: Colors.grey[300])),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              SizedBox(
+                                height: 50,
+                                child: OutlinedButton.icon(
+                                  icon: _isGoogleSigningIn
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Colors.black87,
+                                            ),
+                                          ),
+                                        )
+                                      : Image.asset(
+                                          'assets/google__logo.png',
+                                          height: 24,
+                                          width: 24,
+                                        ),
+                                  label: Text(
+                                    _isGoogleSigningIn
+                                        ? 'Signing in...'
+                                        : 'Continue with Google',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  onPressed: _isGoogleSigningIn
+                                      ? null
+                                      : _handleGoogleSignIn,
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: Colors.grey[300]!),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    backgroundColor: Colors.white,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -248,7 +561,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Sign Up Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

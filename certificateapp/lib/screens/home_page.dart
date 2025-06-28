@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'certificate_form_page.dart';
 import 'repository_page.dart';
 import 'profile_page.dart';
 import '../widgets/custom_navigation_bar.dart';
 import '../models/certificate.dart';
 import '../services/certificate_service.dart';
+import '../services/auth_service.dart';
 import 'dashboard_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,6 +18,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  final AuthService _authService = AuthService();
+  Map<String, dynamic>? _userProfile;
+  bool _isLoadingProfile = true;
 
   final List<Widget> _pages = [
     const CertificateListPage(),
@@ -23,6 +28,30 @@ class _HomePageState extends State<HomePage> {
     const RepositoryPage(),
     const ProfilePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final user = _authService.currentUser;
+      if (user != null) {
+        _userProfile = await _authService.getUserProfile(user.uid);
+        print('User role: ${_userProfile?['role']}');
+      }
+    } catch (e) {
+      print('Error loading user profile: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProfile = false;
+        });
+      }
+    }
+  }
 
   void _onItemTapped(int index) {
     if (_selectedIndex == index) return;
@@ -56,32 +85,67 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: _isLoadingProfile
+          ? const Center(child: CircularProgressIndicator())
+          : _pages[_selectedIndex],
       bottomNavigationBar: CustomNavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onItemTapped,
       ),
-      floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CertificateFormPage()),
-                );
-                // Refresh the certificate list if a certificate was added
-                if (result == true) {
-                  setState(() {
-                    // This will trigger a rebuild of the CertificateListPage
-                  });
-                }
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Add Certificate'),
-              elevation: 4,
-            )
-          : null,
+      floatingActionButton: _shouldShowFAB() ? _buildFAB() : null,
     );
+  }
+
+  bool _shouldShowFAB() {
+    if (_selectedIndex != 0) return false;
+
+    final role = _userProfile?['role']?.toString().toLowerCase();
+    // Show FAB for Recipients and Certificate Authorities
+    return role == 'recipients' ||
+        role == 'certificate authorities (cas)' ||
+        role == 'admin';
+  }
+
+  Widget _buildFAB() {
+    final role = _userProfile?['role']?.toString().toLowerCase();
+
+    if (role == 'certificate authorities (cas)' || role == 'admin') {
+      return FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const CertificateFormPage()),
+          );
+          if (result == true && mounted) {
+            setState(() {
+              // This will trigger a rebuild of the CertificateListPage
+            });
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Issue Certificate'),
+        elevation: 4,
+      );
+    } else {
+      return FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const CertificateFormPage()),
+          );
+          if (result == true && mounted) {
+            setState(() {
+              // This will trigger a rebuild of the CertificateListPage
+            });
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add Certificate'),
+        elevation: 4,
+      );
+    }
   }
 }
 
@@ -94,34 +158,47 @@ class CertificateListPage extends StatefulWidget {
 
 class _CertificateListPageState extends State<CertificateListPage> {
   final CertificateService _certificateService = CertificateService();
+  final AuthService _authService = AuthService();
   List<Certificate> _certificates = [];
   bool _isLoading = true;
+  Map<String, dynamic>? _userProfile;
 
   @override
   void initState() {
     super.initState();
-    _loadCertificates();
+    _loadData();
   }
 
-  Future<void> _loadCertificates() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _loadData() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
+      // Load user profile
+      final user = _authService.currentUser;
+      if (user != null) {
+        _userProfile = await _authService.getUserProfile(user.uid);
+      }
+
+      // Load certificates
       final certificates = await _certificateService.getAllCertificates();
-      setState(() {
-        _certificates = certificates;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
       if (mounted) {
+        setState(() {
+          _certificates = certificates;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading certificates: $e'),
+            content: Text('Error loading data: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -129,10 +206,41 @@ class _CertificateListPageState extends State<CertificateListPage> {
     }
   }
 
+  String _getWelcomeMessage() {
+    final role = _userProfile?['role']?.toString().toLowerCase();
+    final name = _userProfile?['displayName'] ?? 'User';
+
+    switch (role) {
+      case 'certificate authorities (cas)':
+        return 'Welcome, $name! You can issue and manage certificates.';
+      case 'recipients':
+        return 'Welcome, $name! View and manage your certificates.';
+      case 'admin':
+        return 'Welcome, $name! You have full system access.';
+      default:
+        return 'Welcome, $name!';
+    }
+  }
+
+  String _getPageTitle() {
+    final role = _userProfile?['role']?.toString().toLowerCase();
+
+    switch (role) {
+      case 'certificate authorities (cas)':
+        return 'Certificate Management';
+      case 'recipients':
+        return 'My Certificates';
+      case 'admin':
+        return 'System Certificates';
+      default:
+        return 'Digital Certificates';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: _loadCertificates,
+      onRefresh: _loadData,
       child: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -140,9 +248,9 @@ class _CertificateListPageState extends State<CertificateListPage> {
             floating: true,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'Digital Certificates',
-                style: TextStyle(
+              title: Text(
+                _getPageTitle(),
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 20,
                 ),
@@ -155,6 +263,37 @@ class _CertificateListPageState extends State<CertificateListPage> {
                     colors: [
                       Theme.of(context).primaryColor,
                       Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Welcome message
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getWelcomeMessage(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Role: ${_userProfile?['role'] ?? 'Not specified'}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -233,115 +372,134 @@ class CertificateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine if certificate is valid based on expiry date
+    // Determine if certificate is valid based on expiry date (1 year from upload)
     final isValid = certificate.uploadDate.isAfter(
       DateTime.now().subtract(const Duration(days: 365)),
     );
+    final accentColor = Theme.of(context).primaryColor;
 
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isValid
-                  ? Colors.green.withValues(alpha: 0.2)
-                  : Colors.red.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        certificate.fileName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.2,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      certificate.fileName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isValid
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isValid
+                            ? Colors.green.withValues(alpha: 0.3)
+                            : Colors.red.withValues(alpha: 0.3),
+                        width: 1,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isValid
-                            ? Colors.green.withValues(alpha: 0.1)
-                            : Colors.red.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isValid
-                              ? Colors.green.withValues(alpha: 0.3)
-                              : Colors.red.withValues(alpha: 0.3),
-                          width: 1,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isValid ? Icons.verified : Icons.error,
+                          size: 16,
+                          color: isValid ? Colors.green : Colors.red,
                         ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isValid ? Icons.check_circle : Icons.error,
-                            size: 14,
+                        const SizedBox(width: 4),
+                        Text(
+                          isValid ? 'Valid' : 'Invalid',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: isValid ? Colors.green : Colors.red,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isValid ? 'Valid' : 'Expired',
-                            style: TextStyle(
-                              color: isValid ? Colors.green : Colors.red,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      _getFileTypeIcon(certificate.fileType),
-                      size: 16,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    _getFileTypeIcon(certificate.fileType),
+                    size: 20,
+                    color: accentColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    certificate.fileType.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    '${certificate.fileSize} KB',
+                    style: const TextStyle(
+                      fontSize: 12,
                       color: Colors.grey,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      certificate.fileType,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Uploaded: ${certificate.uploadDate.toString().split(' ')[0]}',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+              if (certificate.category != null) ...[
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(
-                      Icons.calendar_today,
+                      Icons.category,
                       size: 16,
                       color: Colors.grey,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Uploaded: ${certificate.uploadDate.toString().split(' ')[0]}',
+                      certificate.category!,
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
@@ -349,28 +507,8 @@ class CertificateCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (certificate.category != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.category,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        certificate.category!,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ],
-            ),
+            ],
           ),
         ),
       ),

@@ -63,6 +63,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '640025676572',
     projectId: 'mobile-certificate',
     storageBucket: 'mobile-certificate.firebasestorage.app',
+    androidClientId: '640025676572-j6utu3b1kqss0vt3k692i0btig39f6ms.apps.googleusercontent.com',
+    iosClientId: '640025676572-lrd1qfgptfr9l1j8bkju2qhn5fp7vm1o.apps.googleusercontent.com',
     iosBundleId: 'com.example.certificateapp',
   );
+
 }
