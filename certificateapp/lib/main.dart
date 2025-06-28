@@ -97,7 +97,7 @@ class AuthWrapper extends StatelessWidget {
         return const RecipientDashboardPage(); // Default to recipient dashboard
       }
     } catch (e) {
-      print('Error checking user data: $e');
+      debugPrint('Error checking user data: $e');
       // On error, sign out and redirect to welcome page
       await FirebaseAuth.instance.signOut();
       return const WelcomePage();

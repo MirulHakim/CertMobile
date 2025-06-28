@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
 class FirebaseStorageService {
@@ -12,23 +13,23 @@ class FirebaseStorageService {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final extension = path.extension(fileName);
       final uniqueFileName = 'certificates/$timestamp$extension';
-      
+
       // Create a reference to the file location in Firebase Storage
       final storageRef = _storage.ref().child(uniqueFileName);
-      
+
       // Upload the file
       final uploadTask = storageRef.putFile(file);
-      
+
       // Wait for the upload to complete
       final snapshot = await uploadTask;
-      
+
       // Get the download URL
       final downloadUrl = await snapshot.ref.getDownloadURL();
-      
-      print('File uploaded successfully: $downloadUrl');
+
+      debugPrint('File uploaded successfully: $downloadUrl');
       return downloadUrl;
     } catch (e) {
-      print('Error uploading file to Firebase Storage: $e');
+      debugPrint('Error uploading file to Firebase Storage: $e');
       return null;
     }
   }
@@ -38,14 +39,14 @@ class FirebaseStorageService {
     try {
       // Create a reference from the download URL
       final ref = _storage.refFromURL(downloadUrl);
-      
+
       // Delete the file
       await ref.delete();
-      
-      print('File deleted successfully from Firebase Storage');
+
+      debugPrint('File deleted successfully from Firebase Storage');
       return true;
     } catch (e) {
-      print('Error deleting file from Firebase Storage: $e');
+      debugPrint('Error deleting file from Firebase Storage: $e');
       return false;
     }
   }
@@ -55,7 +56,7 @@ class FirebaseStorageService {
     try {
       final ref = _storage.refFromURL(downloadUrl);
       final metadata = await ref.getMetadata();
-      
+
       return {
         'name': metadata.name,
         'size': metadata.size,
@@ -64,8 +65,8 @@ class FirebaseStorageService {
         'updated': metadata.updated,
       };
     } catch (e) {
-      print('Error getting file metadata: $e');
+      debugPrint('Error getting file metadata: $e');
       return null;
     }
   }
-} 
+}

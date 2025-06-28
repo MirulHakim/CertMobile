@@ -32,7 +32,7 @@ class DashboardPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Welcome to your certificate dashboard.',
               style: TextStyle(
                 fontSize: 16,
@@ -63,7 +63,7 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             // Recent Certificates
-            Text(
+            const Text(
               'Recent Certificates',
               style: TextStyle(
                 fontSize: 18,
@@ -72,12 +72,12 @@ class DashboardPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _RecentCertificateCard(
+            const _RecentCertificateCard(
               title: 'Flutter Developer',
               issuer: 'Coursera',
               date: 'Apr 2024',
             ),
-            _RecentCertificateCard(
+            const _RecentCertificateCard(
               title: 'AWS Solutions Architect',
               issuer: 'Amazon',
               date: 'Mar 2024',
@@ -100,13 +100,13 @@ class DashboardPage extends StatelessWidget {
                       icon: Icons.verified,
                       color: accentColor,
                     ),
-                    _SummaryItem(
+                    const _SummaryItem(
                       label: 'Shared',
                       value: '3',
                       icon: Icons.share,
                       color: Colors.green,
                     ),
-                    _SummaryItem(
+                    const _SummaryItem(
                       label: 'Pending',
                       value: '2',
                       icon: Icons.hourglass_empty,
@@ -146,11 +146,11 @@ class DashboardPage extends StatelessWidget {
 class _DashboardAction extends StatelessWidget {
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _DashboardAction({
     required this.icon,
     required this.label,
-    required this.onTap,
+    this.onTap,
   });
 
   @override
@@ -161,7 +161,8 @@ class _DashboardAction extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 26,
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+            backgroundColor:
+                Theme.of(context).primaryColor.withValues(alpha: 0.1),
             child: Icon(icon, size: 28, color: Theme.of(context).primaryColor),
           ),
           const SizedBox(height: 8),
