@@ -13,8 +13,7 @@ class _DebugPageState extends State<DebugPage> {
   final GoogleAuthService _googleAuthService = GoogleAuthService();
   bool _isLoading = false;
   String _debugInfo = '';
-  List<String> _logMessages = [];
-  bool _isGoogleSigningIn = false;
+  final List<String> _logMessages = [];
 
   void _addLog(String message) {
     setState(() {
@@ -22,30 +21,30 @@ class _DebugPageState extends State<DebugPage> {
           .add('${DateTime.now().toString().substring(11, 19)}: $message');
       _debugInfo = _logMessages.join('\n');
     });
-    print(message);
+    debugPrint(message);
   }
 
   Future<void> _handleGoogleSignIn() async {
-    setState(() => _isGoogleSigningIn = true);
+    setState(() => _isLoading = true);
     try {
       final userCredential = await _googleAuthService.signInWithGoogle();
       if (userCredential != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Signed in with Google!')),
+            const SnackBar(content: Text('Signed in with Google!')),
           );
           // DO NOT navigate manually!
         }
       }
     } catch (e) {
-      print('Google Sign-In failed: $e');
+      debugPrint('Google Sign-In failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Google Sign-In failed: $e')),
         );
       }
     } finally {
-      if (mounted) setState(() => _isGoogleSigningIn = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

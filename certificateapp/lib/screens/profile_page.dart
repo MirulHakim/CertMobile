@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import 'welcome_page.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUserData();
-    _checkAuthState();
+    _printUserInfo();
   }
 
   Future<void> _loadUserData() async {
@@ -36,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _userProfile = await _authService.getUserProfile(_currentUser!.uid);
       }
     } catch (e) {
-      print('Error loading user data: $e');
+      debugPrint('Error loading user data: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -46,65 +47,33 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _checkAuthState() async {
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      print('ProfilePage - Current Firebase user: ${currentUser?.email}');
-      print('ProfilePage - Current Firebase user ID: ${currentUser?.uid}');
+  void _printUserInfo() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    debugPrint('ProfilePage - Current Firebase user: \\${currentUser?.email}');
+    debugPrint('ProfilePage - Current Firebase user ID: \\${currentUser?.uid}');
+    _checkGoogleSignIn();
+  }
 
-      final isGoogleSignedIn =
-          await _authService.googleAuthService.isSignedIn();
-      print('ProfilePage - Is Google signed in: $isGoogleSignedIn');
+  Future<void> _checkGoogleSignIn() async {
+    try {
+      final isGoogleSignedIn = await GoogleSignIn().isSignedIn();
+      debugPrint('ProfilePage - Is Google signed in: \\${isGoogleSignedIn}');
     } catch (e) {
-      print('ProfilePage - Error checking auth state: $e');
+      debugPrint('ProfilePage - Error checking auth state: \\${e}');
     }
   }
 
   Future<void> _handleLogout() async {
     try {
-      // Show loading indicator
+      await AuthService().signOut();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Signing out...'),
-            backgroundColor: Colors.blue,
-          ),
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const WelcomePage()),
+          (route) => false,
         );
-      }
-
-      // Sign out from all services
-      await _authService.signOut();
-
-      if (mounted) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Logged out successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        // Force navigation to welcome page after a brief delay
-        await Future.delayed(const Duration(milliseconds: 800));
-
-        if (mounted) {
-          // Clear all navigation stack and go to welcome page
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const WelcomePage()),
-            (route) => false,
-          );
-        }
       }
     } catch (e) {
-      print('Logout error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error logging out: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      debugPrint('Logout error: $e');
     }
   }
 
@@ -251,7 +220,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton(
-                            onPressed: _checkAuthState,
+                            onPressed: _printUserInfo,
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               side: const BorderSide(color: Colors.orange),

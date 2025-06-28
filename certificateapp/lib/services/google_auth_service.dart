@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class GoogleAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -42,7 +43,7 @@ class GoogleAuthService {
 
       return userCredential;
     } catch (e) {
-      print('Google Sign-In error: $e');
+      debugPrint('Google Sign-In error: $e');
       rethrow;
     }
   }
@@ -63,9 +64,9 @@ class GoogleAuthService {
         'emailVerified': user.emailVerified,
         'registrationCompleted': false, // Mark as needing registration
       });
-      print('Basic Google user profile created successfully');
+      debugPrint('Basic Google user profile created successfully');
     } catch (e) {
-      print('Error creating basic Google user profile: $e');
+      debugPrint('Error creating basic Google user profile: $e');
       rethrow;
     }
   }
@@ -76,41 +77,41 @@ class GoogleAuthService {
       await _firestore.collection('users').doc(uid).update({
         'lastLoginAt': FieldValue.serverTimestamp(),
       });
-      print('Last login time updated for Google user');
+      debugPrint('Last login time updated for Google user');
     } catch (e) {
-      print('Error updating last login: $e');
+      debugPrint('Error updating last login: $e');
     }
   }
 
   // Sign out from Google
   Future<void> signOut() async {
     try {
-      print('GoogleAuthService: Starting Google Sign-In sign out...');
+      debugPrint('GoogleAuthService: Starting Google Sign-In sign out...');
 
       // Check if user is currently signed in with Google
       final isSignedIn = await _googleSignIn.isSignedIn();
-      print(
+      debugPrint(
           'GoogleAuthService: Is currently signed in with Google: $isSignedIn');
 
       if (isSignedIn) {
         // Sign out from Google Sign-In
         await _googleSignIn.signOut();
-        print('GoogleAuthService: Google Sign-In signed out successfully');
+        debugPrint('GoogleAuthService: Google Sign-In signed out successfully');
       } else {
-        print('GoogleAuthService: User was not signed in with Google');
+        debugPrint('GoogleAuthService: User was not signed in with Google');
       }
 
       // Also check Firebase Auth state
       if (_auth.currentUser != null) {
-        print(
+        debugPrint(
             'GoogleAuthService: Firebase user still exists: ${_auth.currentUser?.email}');
       } else {
-        print('GoogleAuthService: No Firebase user found');
+        debugPrint('GoogleAuthService: No Firebase user found');
       }
 
-      print('GoogleAuthService: Complete sign out process finished');
+      debugPrint('GoogleAuthService: Complete sign out process finished');
     } catch (e) {
-      print('GoogleAuthService: Error signing out from Google: $e');
+      debugPrint('GoogleAuthService: Error signing out from Google: $e');
       rethrow;
     }
   }
@@ -120,7 +121,7 @@ class GoogleAuthService {
     try {
       return await _googleSignIn.isSignedIn();
     } catch (e) {
-      print('Error checking Google Sign-In status: $e');
+      debugPrint('Error checking Google Sign-In status: $e');
       return false;
     }
   }
@@ -130,7 +131,7 @@ class GoogleAuthService {
     try {
       return await _googleSignIn.signInSilently();
     } catch (e) {
-      print('Error getting current Google user: $e');
+      debugPrint('Error getting current Google user: $e');
       return null;
     }
   }
@@ -142,7 +143,7 @@ class GoogleAuthService {
       await _googleSignIn.signOut();
       return await signInWithGoogle();
     } catch (e) {
-      print('Force Google Sign-In error: $e');
+      debugPrint('Force Google Sign-In error: $e');
       rethrow;
     }
   }
