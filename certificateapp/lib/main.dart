@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'screens/login_page.dart';
 import 'screens/welcome_page.dart';
+import 'screens/admin_dashboard_page.dart';
+import 'screens/ca_verification_page.dart';
+import 'screens/metadata_rules_page.dart';
+import 'services/admin_service.dart';
 
 void main() {
+  // Initialize admin service with mock data
+  AdminService().initializeMockData();
   runApp(const MyApp());
 }
 
@@ -19,7 +25,7 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF2196F3),
           brightness: Brightness.light,
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -33,6 +39,11 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const WelcomePage(),
+      routes: {
+        '/admin': (context) => const AdminDashboardPage(),
+        '/ca-verification': (context) => const CAVerificationPage(),
+        '/metadata-rules': (context) => const MetadataRulesPage(),
+      },
     );
   }
 }
