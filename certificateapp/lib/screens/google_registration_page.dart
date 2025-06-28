@@ -23,7 +23,6 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _customRoleController = TextEditingController();
   final AuthService _authService = AuthService();
-  final GoogleAuthService _googleAuthService = GoogleAuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String? _selectedRole;
@@ -76,7 +75,7 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
       });
 
       try {
-        print('Completing Google user registration...');
+        debugPrint('Completing Google user registration...');
 
         // Create user profile in Firestore with role information
         await _firestore.collection('users').doc(widget.user.uid).set({
@@ -84,7 +83,6 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
           'email': widget.user.email,
           'displayName': widget.user.displayName,
           'photoURL': widget.user.photoURL,
-          'phoneNumber': widget.user.phoneNumber,
           'createdAt': FieldValue.serverTimestamp(),
           'lastLoginAt': FieldValue.serverTimestamp(),
           'role': _selectedRole == 'Other'
@@ -102,7 +100,7 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
           'registrationCompleted': true,
         });
 
-        print('Google user registration completed successfully');
+        debugPrint('Google user registration completed successfully');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -125,10 +123,10 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
           }
         }
       } catch (e) {
-        print('Registration error: $e');
+        debugPrint('Registration error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Registration failed. Please try again.'),
               backgroundColor: Colors.red,
             ),
@@ -160,7 +158,7 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -170,7 +168,7 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
                       children: [
                         CircleAvatar(
                           radius: 30,
-                          backgroundColor: accentColor.withOpacity(0.2),
+                          backgroundColor: accentColor.withValues(alpha: 0.2),
                           backgroundImage: widget.user.photoURL != null
                               ? NetworkImage(widget.user.photoURL!)
                               : null,
@@ -210,7 +208,7 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
                           icon: const Icon(Icons.swap_horiz),
                           tooltip: 'Switch Account',
                           style: IconButton.styleFrom(
-                            backgroundColor: accentColor.withOpacity(0.1),
+                            backgroundColor: accentColor.withValues(alpha: 0.1),
                           ),
                         ),
                       ],
@@ -361,9 +359,9 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

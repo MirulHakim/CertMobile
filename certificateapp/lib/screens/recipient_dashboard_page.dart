@@ -34,7 +34,7 @@ class _RecipientDashboardPageState extends State<RecipientDashboardPage> {
         _userProfile = await _authService.getUserProfile(user.uid);
       }
     } catch (e) {
-      print('Error loading Recipient dashboard data: $e');
+      debugPrint('Error loading Recipient dashboard data: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -99,7 +99,7 @@ class _RecipientDashboardPageState extends State<RecipientDashboardPage> {
                             radius: 30,
                             backgroundColor:
                                 Colors.white.withValues(alpha: 0.2),
-                            child: Icon(
+                            child: const Icon(
                               Icons.verified_user,
                               size: 30,
                               color: Colors.white,

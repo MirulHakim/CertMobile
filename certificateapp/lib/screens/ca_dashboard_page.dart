@@ -3,6 +3,9 @@ import '../services/auth_service.dart';
 import 'certificate_form_page.dart';
 import 'repository_page.dart';
 import 'profile_page.dart';
+import 'certificate_requests_page.dart';
+import 'true_copy_requests_page.dart';
+import 'repository_page.dart';
 
 class CADashboardPage extends StatefulWidget {
   const CADashboardPage({super.key});
@@ -34,7 +37,7 @@ class _CADashboardPageState extends State<CADashboardPage> {
         _userProfile = await _authService.getUserProfile(user.uid);
       }
     } catch (e) {
-      print('Error loading CA dashboard data: $e');
+      debugPrint('Error loading CA dashboard data: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -151,7 +154,13 @@ class _CADashboardPageState extends State<CADashboardPage> {
                             label: 'Certificate Requests',
                             color: Colors.blue,
                             onTap: () {
-                              // TODO: Navigate to Certificate Requests page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CertificateRequestsPage(),
+                                ),
+                              );
                             },
                           ),
                         ),
@@ -179,7 +188,13 @@ class _CADashboardPageState extends State<CADashboardPage> {
                             label: 'True Copy Requests',
                             color: Colors.orange,
                             onTap: () {
-                              // TODO: Navigate to True Copy Requests page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const TrueCopyRequestsPage(),
+                                ),
+                              );
                             },
                           ),
                         ),
