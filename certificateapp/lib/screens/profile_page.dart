@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
-import '../widgets/custom_navigation_bar.dart';
-import 'home_page.dart';
-import 'dashboard_page.dart';
-import 'repository_page.dart';
 import 'welcome_page.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -279,26 +275,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-      bottomNavigationBar: CustomNavigationBar(
-        selectedIndex: 3,
-        onDestinationSelected: (index) {
-          if (index == 0) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          } else if (index == 1) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const DashboardPage()),
-            );
-          } else if (index == 2) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const RepositoryPage()),
-            );
-          } else if (index == 3) {
-            // Already on Profile
-          }
-        },
-      ),
     );
   }
 }

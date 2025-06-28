@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_navigation_bar.dart';
-import 'home_page.dart';
-import 'repository_page.dart';
-import 'profile_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -118,26 +114,6 @@ class DashboardPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: CustomNavigationBar(
-        selectedIndex: 1,
-        onDestinationSelected: (index) {
-          if (index == 0) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          } else if (index == 1) {
-            // Already on Dashboard, do nothing
-          } else if (index == 2) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const RepositoryPage()),
-            );
-          } else if (index == 3) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const ProfilePage()),
-            );
-          }
-        },
       ),
     );
   }
