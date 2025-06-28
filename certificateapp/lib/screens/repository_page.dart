@@ -513,7 +513,7 @@ class CertificateDetailsSheet extends StatelessWidget {
                         ),
                       );
                     }
-                  }
+                  } //note: this is the code for downloading the certificate
                 },
                 icon: const Icon(Icons.download),
                 label: const Text('Download/View PDF'),
