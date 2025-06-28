@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../services/certificate_service.dart';
 import 'certificate_form_page.dart';
 import 'repository_page.dart';
 import 'profile_page.dart';
@@ -14,7 +13,6 @@ class CADashboardPage extends StatefulWidget {
 
 class _CADashboardPageState extends State<CADashboardPage> {
   final AuthService _authService = AuthService();
-  final CertificateService _certificateService = CertificateService();
   Map<String, dynamic>? _userProfile;
   bool _isLoading = true;
 
@@ -101,7 +99,7 @@ class _CADashboardPageState extends State<CADashboardPage> {
                             radius: 30,
                             backgroundColor:
                                 Colors.white.withValues(alpha: 0.2),
-                            child: Icon(
+                            child: const Icon(
                               Icons.admin_panel_settings,
                               size: 30,
                               color: Colors.white,

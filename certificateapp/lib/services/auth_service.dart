@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'google_auth_service.dart';
 
 class AuthService {
@@ -28,7 +29,7 @@ class AuthService {
 
       return userCredential;
     } catch (e) {
-      print('Error signing in with email and password: $e');
+      debugPrint('Error signing in with email and password: $e');
       rethrow;
     }
   }
@@ -48,7 +49,7 @@ class AuthService {
 
       return userCredential;
     } catch (e) {
-      print('Error creating user with email and password: $e');
+      debugPrint('Error creating user with email and password: $e');
       rethrow;
     }
   }
@@ -69,7 +70,7 @@ class AuthService {
         'authProvider': 'email',
       });
     } catch (e) {
-      print('Error creating user profile: $e');
+      debugPrint('Error creating user profile: $e');
     }
   }
 
@@ -90,7 +91,7 @@ class AuthService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error updating user profile: $e');
+      debugPrint('Error updating user profile: $e');
       rethrow;
     }
   }
@@ -101,7 +102,7 @@ class AuthService {
       final doc = await _firestore.collection('users').doc(uid).get();
       return doc.data();
     } catch (e) {
-      print('Error getting user profile: $e');
+      debugPrint('Error getting user profile: $e');
       return null;
     }
   }
@@ -109,29 +110,30 @@ class AuthService {
   // Sign out (handles both email/password and Google Sign-In)
   Future<void> signOut() async {
     try {
-      print('AuthService: Starting sign out process...');
+      debugPrint('AuthService: Starting sign out process...');
 
       // First, sign out from Google if user was signed in with Google
       try {
         await _googleAuthService.signOut();
-        print('AuthService: Google Sign-In sign out completed');
+        debugPrint('AuthService: Google Sign-In sign out completed');
       } catch (e) {
-        print('AuthService: Error signing out from Google: $e');
+        debugPrint('AuthService: Error signing out from Google: $e');
         // Continue with Firebase sign out even if Google sign out fails
       }
 
       // Then, sign out from Firebase Auth
       try {
         await _auth.signOut();
-        print('AuthService: Firebase Auth sign out completed');
+        debugPrint('AuthService: Firebase Auth sign out completed');
       } catch (e) {
-        print('AuthService: Error signing out from Firebase: $e');
+        debugPrint('AuthService: Error signing out from Firebase: $e');
         rethrow;
       }
 
-      print('AuthService: Complete sign out process finished successfully');
+      debugPrint(
+          'AuthService: Complete sign out process finished successfully');
     } catch (e) {
-      print('AuthService: Error in sign out process: $e');
+      debugPrint('AuthService: Error in sign out process: $e');
       rethrow;
     }
   }
@@ -142,7 +144,7 @@ class AuthService {
       final doc = await _firestore.collection('users').doc(uid).get();
       return doc.exists;
     } catch (e) {
-      print('Error checking if user exists: $e');
+      debugPrint('Error checking if user exists: $e');
       return false;
     }
   }
@@ -154,7 +156,7 @@ class AuthService {
         'lastLoginAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error updating last login: $e');
+      debugPrint('Error updating last login: $e');
     }
   }
 
@@ -163,7 +165,7 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      print('Error resetting password: $e');
+      debugPrint('Error resetting password: $e');
       rethrow;
     }
   }
