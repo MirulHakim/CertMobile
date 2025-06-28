@@ -4,6 +4,7 @@ import '../widgets/custom_navigation_bar.dart';
 import 'home_page.dart';
 import 'dashboard_page.dart';
 import 'repository_page.dart';
+import 'admin_dashboard_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -111,6 +112,19 @@ class ProfilePage extends StatelessWidget {
                     subtitle: 'App version and information',
                     onTap: () {
                       // TODO: Navigate to about page
+                    },
+                  ),
+                  // Admin Dashboard Option
+                  ProfileOptionCard(
+                    icon: Icons.admin_panel_settings,
+                    title: 'Admin Dashboard',
+                    subtitle: 'Access administrative features',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AdminDashboardPage(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 16),

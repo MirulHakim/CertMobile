@@ -6,6 +6,7 @@ import '../widgets/custom_navigation_bar.dart';
 import '../models/certificate.dart';
 import '../services/certificate_service.dart';
 import 'dashboard_page.dart';
+import 'admin_dashboard_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -139,6 +140,19 @@ class _CertificateListPageState extends State<CertificateListPage> {
             expandedHeight: 120,
             floating: true,
             pinned: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.admin_panel_settings),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AdminDashboardPage(),
+                    ),
+                  );
+                },
+                tooltip: 'Admin Dashboard',
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: const Text(
                 'Digital Certificates',
