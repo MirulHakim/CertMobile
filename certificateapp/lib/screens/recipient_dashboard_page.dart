@@ -147,28 +147,8 @@ class _RecipientDashboardPageState extends State<RecipientDashboardPage> {
                       children: [
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.add_circle_outline,
-                            label: 'Add Certificate',
-                            color: Colors.blue,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CertificateFormPage(),
-                                ),
-                              );
-                              if (result == true && mounted) {
-                                _loadData();
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _DashboardAction(
-                            icon: Icons.search_outlined,
-                            label: 'Search Certificates',
+                            icon: Icons.folder_open,
+                            label: 'My Certificates',
                             color: Colors.green,
                             onTap: () {
                               Navigator.push(
@@ -180,22 +160,18 @@ class _RecipientDashboardPageState extends State<RecipientDashboardPage> {
                             },
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
+                        const SizedBox(width: 16),
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.share_outlined,
-                            label: 'Share Certificate',
-                            color: Colors.orange,
+                            icon: Icons.assignment,
+                            label: 'Request Certificate',
+                            color: Colors.blue,
                             onTap: () {
-                              // TODO: Implement certificate sharing
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Certificate sharing coming soon!'),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CertificateFormPage(),
                                 ),
                               );
                             },
@@ -204,17 +180,11 @@ class _RecipientDashboardPageState extends State<RecipientDashboardPage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.download_outlined,
-                            label: 'Download',
-                            color: Colors.purple,
+                            icon: Icons.file_upload,
+                            label: 'Request True Copy',
+                            color: Colors.orange,
                             onTap: () {
-                              // TODO: Implement certificate download
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Certificate download coming soon!'),
-                                ),
-                              );
+                              // TODO: Navigate to Request True Copy page
                             },
                           ),
                         ),

@@ -7,6 +7,7 @@ import 'screens/welcome_page.dart';
 import 'screens/google_registration_page.dart';
 import 'screens/ca_dashboard_page.dart';
 import 'screens/recipient_dashboard_page.dart';
+import 'screens/client_dashboard_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,11 +94,13 @@ class AuthWrapper extends StatelessWidget {
         return const RecipientDashboardPage();
       } else if (role == 'certificate authorities (cas)') {
         return const CADashboardPage();
+      } else if (role == 'client') {
+        return const ClientDashboardPage();
       } else {
         return const RecipientDashboardPage(); // Default to recipient dashboard
       }
     } catch (e) {
-      print('Error checking user data: $e');
+      debugPrint('Error checking user data: $e');
       // On error, sign out and redirect to welcome page
       await FirebaseAuth.instance.signOut();
       return const WelcomePage();
@@ -129,54 +132,6 @@ class AuthWrapper extends StatelessWidget {
         }
         return const WelcomePage();
       },
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

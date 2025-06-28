@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/google_auth_service.dart';
-import 'home_page.dart';
 import 'registration_page.dart';
 import 'welcome_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -65,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
 
             if (mounted) {
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const HomePage()),
+                MaterialPageRoute(builder: (context) => const WelcomePage()),
                 (route) => false,
               );
             }

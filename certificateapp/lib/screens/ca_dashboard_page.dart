@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../services/certificate_service.dart';
 import 'certificate_form_page.dart';
 import 'repository_page.dart';
 import 'profile_page.dart';
@@ -14,7 +13,6 @@ class CADashboardPage extends StatefulWidget {
 
 class _CADashboardPageState extends State<CADashboardPage> {
   final AuthService _authService = AuthService();
-  final CertificateService _certificateService = CertificateService();
   Map<String, dynamic>? _userProfile;
   bool _isLoading = true;
 
@@ -101,7 +99,7 @@ class _CADashboardPageState extends State<CADashboardPage> {
                             radius: 30,
                             backgroundColor:
                                 Colors.white.withValues(alpha: 0.2),
-                            child: Icon(
+                            child: const Icon(
                               Icons.admin_panel_settings,
                               size: 30,
                               color: Colors.white,
@@ -149,55 +147,26 @@ class _CADashboardPageState extends State<CADashboardPage> {
                       children: [
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.add_circle_outline,
-                            label: 'Issue Certificate',
-                            color: Colors.green,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CertificateFormPage(),
-                                ),
-                              );
-                              if (result == true && mounted) {
-                                _loadData();
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _DashboardAction(
-                            icon: Icons.verified_user_outlined,
-                            label: 'Verify Certificate',
+                            icon: Icons.assignment,
+                            label: 'Certificate Requests',
                             color: Colors.blue,
                             onTap: () {
-                              // TODO: Implement certificate verification
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Certificate verification coming soon!'),
-                                ),
-                              );
+                              // TODO: Navigate to Certificate Requests page
                             },
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
+                        const SizedBox(width: 16),
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.people_outline,
-                            label: 'Manage Users',
-                            color: Colors.orange,
+                            icon: Icons.verified,
+                            label: 'Issued Certificates',
+                            color: Colors.green,
                             onTap: () {
-                              // TODO: Implement user management
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('User management coming soon!'),
+                              // TODO: Navigate to Issued Certificates page (RepositoryPage for now)
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RepositoryPage(),
                                 ),
                               );
                             },
@@ -206,16 +175,11 @@ class _CADashboardPageState extends State<CADashboardPage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _DashboardAction(
-                            icon: Icons.analytics_outlined,
-                            label: 'Analytics',
-                            color: Colors.purple,
+                            icon: Icons.file_upload,
+                            label: 'True Copy Requests',
+                            color: Colors.orange,
                             onTap: () {
-                              // TODO: Implement analytics
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Analytics coming soon!'),
-                                ),
-                              );
+                              // TODO: Navigate to True Copy Requests page
                             },
                           ),
                         ),
