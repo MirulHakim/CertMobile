@@ -10,7 +10,6 @@ import 'recipient_dashboard_page.dart';
 import 'admin_dashboard_page.dart';
 import 'admin_login_page.dart';
 
-
 class WelcomePage extends StatefulWidget {
   const WelcomePage({Key? key}) : super(key: key);
 
@@ -153,7 +152,7 @@ class _WelcomePageState extends State<WelcomePage> {
       if (userDoc.exists) {
         final userData = userDoc.data()!;
         final role = userData['role'];
-        
+
         if (role == 'admin') {
           // User has admin role, navigate to admin dashboard
           if (mounted) {
@@ -180,7 +179,8 @@ class _WelcomePageState extends State<WelcomePage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('User profile not found. Please complete registration.'),
+              content:
+                  Text('User profile not found. Please complete registration.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -440,25 +440,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 const SizedBox(height: 16),
 
                 // Temporary debug button
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DebugPage(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Debug Google Sign-In',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
+
                 // Quick admin access for development
                 TextButton(
                   onPressed: () {

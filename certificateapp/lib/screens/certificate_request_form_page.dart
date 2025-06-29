@@ -4,6 +4,8 @@ import 'dart:io';
 import '../services/certificate_service.dart';
 import '../services/auth_service.dart';
 import '../services/certificate_request_service.dart';
+import 'package:read_pdf_text/read_pdf_text.dart';
+import 'package:intl/intl.dart';
 
 class CertificateRequestFormPage extends StatefulWidget {
   const CertificateRequestFormPage({super.key});
@@ -95,6 +97,35 @@ class _CertificateRequestFormPageState
         setState(() {
           _selectedFile = file;
         });
+
+        // Extract metadata if it's a PDF file
+        if (path.toLowerCase().endsWith('.pdf')) {
+          try {
+            final data = await extractCertificateData(path);
+            autofillForm(data);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content:
+                      Text('Certificate data extracted and form auto-filled!'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          } catch (e) {
+            print('Error extracting PDF data: $e');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Could not extract data from PDF: $e'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -174,20 +205,28 @@ class _CertificateRequestFormPageState
             : _additionalInfoController.text.trim(),
         'priority': _selectedPriority!,
         'requestedBy': _authService.currentUser?.uid ?? 'unknown',
+        'requestedByEmail': _authService.currentUser?.email ?? 'unknown',
         'hasAttachment': _selectedFile != null,
       };
 
-      // Save the request using the service
-      await _certificateRequestService.addRequest(requestData);
+      // Save the request using the enhanced service with file upload
+      final requestId = await _certificateRequestService.addRequest(
+        requestData,
+        file: _selectedFile,
+      );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Certificate request submitted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context, true);
+      if (requestId != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Certificate request submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        throw Exception('Failed to submit request');
       }
     } catch (e) {
       if (mounted) {
@@ -203,6 +242,59 @@ class _CertificateRequestFormPageState
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  Future<Map<String, String>> extractCertificateData(String pdfPath) async {
+    final text = await ReadPdfText.getPDFtext(pdfPath);
+    final Map<String, String> data = {};
+
+    // List of supported keys (lowercase, as in the PDF)
+    final supportedKeys = [
+      'certificate name',
+      'certificate type',
+      'issuer',
+      'recipient',
+      'expiry date',
+      'description',
+      'additional information',
+      'reason',
+    ];
+
+    final regex = RegExp(r'([a-zA-Z ]+)\s*:\s*(.+)');
+    for (final line in text.split('\n')) {
+      final match = regex.firstMatch(line);
+      if (match != null) {
+        final key = match.group(1)!.trim().toLowerCase();
+        final value = match.group(2)!.trim();
+        if (supportedKeys.contains(key)) {
+          data[key] = value;
+        }
+      }
+    }
+    return data;
+  }
+
+  void autofillForm(Map<String, String> data) {
+    _certNameController.text = data['certificate name'] ?? '';
+    _issuerController.text = data['issuer'] ?? '';
+    _recipientController.text = data['recipient'] ?? '';
+    _descriptionController.text = data['description'] ?? '';
+    _additionalInfoController.text = data['additional information'] ?? '';
+    _reasonController.text = data['reason'] ?? '';
+
+    // Certificate Type (dropdown)
+    if (data['certificate type'] != null) {
+      final type = data['certificate type']!.trim().toLowerCase();
+      final match = _certificateTypes.firstWhere(
+        (t) => t.toLowerCase() == type,
+        orElse: () => '',
+      );
+      if (match != '') {
+        _selectedType = match;
+      }
+    }
+
+    setState(() {});
   }
 
   @override
@@ -456,6 +548,32 @@ class _CertificateRequestFormPageState
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.info_outline,
+                                    size: 16, color: Colors.blue[700]),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'PDF files will automatically extract certificate data and fill the form fields',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blue[700],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 16),
