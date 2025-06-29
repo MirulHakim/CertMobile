@@ -3,8 +3,13 @@ import '../services/google_auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'google_registration_page.dart';
+
 import 'package:flutter/foundation.dart';
 import 'recipient_dashboard_page.dart';
+
+import 'admin_dashboard_page.dart';
+import 'admin_login_page.dart';
+
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({Key? key}) : super(key: key);
@@ -120,6 +125,77 @@ class _WelcomePageState extends State<WelcomePage> {
       }
     } finally {
       if (mounted) setState(() => _isGoogleSigningIn = false);
+    }
+  }
+
+  Future<void> _handleAdminAccess() async {
+    try {
+      // Check if user is signed in
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please sign in first to access admin dashboard'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if user has admin role
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
+
+      if (userDoc.exists) {
+        final userData = userDoc.data()!;
+        final role = userData['role'];
+        
+        if (role == 'admin') {
+          // User has admin role, navigate to admin dashboard
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdminDashboardPage(),
+              ),
+            );
+          }
+        } else {
+          // User doesn't have admin role
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Access denied. Admin privileges required.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        // User document doesn't exist
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User profile not found. Please complete registration.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('WelcomePage: Admin access error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error accessing admin dashboard: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -258,6 +334,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
                 // DEV SHORTCUT BUTTON (only in debug mode)
                 if (kDebugMode)
                   Padding(
@@ -281,6 +358,59 @@ class _WelcomePageState extends State<WelcomePage> {
                       child: const Text('Dev Shortcut Login'),
                     ),
                   ),
+
+                // Admin Dashboard Access Button
+                Container(
+                  width: 320,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdminLoginPage(),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.admin_panel_settings,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Admin Login',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
                 // Alternative options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -308,6 +438,48 @@ class _WelcomePageState extends State<WelcomePage> {
                   ],
                 ),
                 const SizedBox(height: 16),
+
+                // Temporary debug button
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DebugPage(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Debug Google Sign-In',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Quick admin access for development
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminDashboardPage(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Quick Admin Access (Dev)',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 12,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 60),
+
                 // Features section
                 Container(
                   padding: const EdgeInsets.all(24),

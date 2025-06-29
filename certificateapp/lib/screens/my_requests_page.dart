@@ -143,6 +143,30 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
                               children: [
                                 Text('ID: ${request['id']}'),
                                 Text('Type: ${request['certificateType']}'),
+                                if (request['requestType'] == 'true_copy') ...[
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.purple.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'TRUE COPY',
+                                      style: TextStyle(
+                                        color: Colors.purple[700],
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                                 Text('Priority: ${request['priority']}'),
                                 Text('Reason: ${request['reason']}'),
                                 Text(

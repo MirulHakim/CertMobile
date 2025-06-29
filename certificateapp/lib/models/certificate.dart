@@ -179,7 +179,6 @@ class Certificate {
     return status == 'active' && !isExpired;
   }
 
-
   String get formattedFileSize {
     if (fileSize == null) return 'Unknown';
     if (fileSize! < 1024) {
@@ -210,4 +209,14 @@ class Certificate {
         (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
     return 'CERT-$year$month$day-$random';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Certificate &&
+          runtimeType == other.runtimeType &&
+          certId == other.certId;
+
+  @override
+  int get hashCode => certId.hashCode;
 }
