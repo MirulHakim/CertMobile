@@ -147,7 +147,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.2,
       children: [
         _buildStatCard(
           'Total Certificates',
