@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/google_auth_service.dart';
-import 'debug_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'google_registration_page.dart';
@@ -284,26 +283,6 @@ class _WelcomePageState extends State<WelcomePage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Temporary debug button
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DebugPage(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Debug Google Sign-In',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 60),
                 // Features section
                 Container(
                   padding: const EdgeInsets.all(24),

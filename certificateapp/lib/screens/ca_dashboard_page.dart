@@ -37,7 +37,7 @@ class _CADashboardPageState extends State<CADashboardPage> {
         _userProfile = await _authService.getUserProfile(user.uid);
       }
     } catch (e) {
-      debugPrint('Error loading CA dashboard data: $e');
+      // debugPrint('Error loading CA dashboard data: $e');
     } finally {
       if (mounted) {
         setState(() {

@@ -48,19 +48,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _printUserInfo() {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    debugPrint('ProfilePage - Current Firebase user: \\${currentUser?.email}');
-    debugPrint('ProfilePage - Current Firebase user ID: \\${currentUser?.uid}');
-    _checkGoogleSignIn();
+    // Removed debug info
   }
 
   Future<void> _checkGoogleSignIn() async {
-    try {
-      final isGoogleSignedIn = await GoogleSignIn().isSignedIn();
-      debugPrint('ProfilePage - Is Google signed in: \\${isGoogleSignedIn}');
-    } catch (e) {
-      debugPrint('ProfilePage - Error checking auth state: \\${e}');
-    }
+    // Removed debug info
   }
 
   Future<void> _handleLogout() async {
@@ -234,22 +226,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        // Debug button (temporary)
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: _printUserInfo,
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: const BorderSide(color: Colors.orange),
-                            ),
-                            child: const Text(
-                              'Debug: Check Auth State',
-                              style: TextStyle(color: Colors.orange),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
                         // Logout Button
                         SizedBox(
                           width: double.infinity,
@@ -292,7 +268,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ],
               ),
-      ),
+            ),
     );
   }
 }
