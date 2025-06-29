@@ -6,7 +6,6 @@ import '../models/certificate.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class CertificateService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -218,72 +217,6 @@ class CertificateService {
           .contains(fileExtension)) {
         throw Exception(
             'Invalid file type. Only PDF, JPG, PNG, DOC, DOCX are allowed.');
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-
-  Future<String> _getCertificateDirectory() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final certDir = Directory('${appDir.path}/certificates');
-    if (!await certDir.exists()) {
-      await certDir.create(recursive: true);
-    }
-    return certDir.path;
-  }
-
-  Future<Certificate?> addCertificate() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
-        allowMultiple: false,
-      );
-
-      if (result != null) {
-        final file = File(result.files.single.path!);
-        final fileName = result.files.single.name;
-        final fileSize = await file.length();
-        final fileExtension = path.extension(fileName).toLowerCase();
-
-        // Determine file type
-        String fileType;
-        switch (fileExtension) {
-          case '.pdf':
-            fileType = 'PDF';
-            break;
-          case '.jpg':
-          case '.jpeg':
-          case '.png':
-            fileType = 'Image';
-            break;
-          case '.doc':
-          case '.docx':
-            fileType = 'Document';
-            break;
-          default:
-            fileType = 'Other';
-        }
-
-        // Copy file to app directory
-        final certDir = await _getCertificateDirectory();
-        final uniqueFileName =
-            '${DateTime.now().millisecondsSinceEpoch}_$fileName';
-        final newFilePath = path.join(certDir, uniqueFileName);
-        await file.copy(newFilePath);
-
-        // Create certificate record
-        final certificate = Certificate(
-          fileName: fileName,
-          filePath: newFilePath,
-          fileType: fileType,
-          fileSize: fileSize.toDouble(),
-          uploadDate: DateTime.now(),
-          description:
-              'Certificate uploaded on ${DateTime.now().toString().split(' ')[0]}',
-          category: 'General',
-        );
-
-        // Save to database
-        final id = await _databaseHelper.insertCertificate(certificate);
-        return certificate.copyWith(id: id);
       }
 
       final storageRef = _storage.ref().child('certificates/$certId/$fileName');
@@ -579,17 +512,5 @@ class CertificateService {
       'uploadedAt': Timestamp.now(),
       // ...add other fields as needed...
     });
-  }
-
-  Future<String?> uploadFileToFirebase(File file, String fileName) async {
-    try {
-      final storageRef =
-          FirebaseStorage.instance.ref().child('certificates/$fileName');
-      final uploadTask = await storageRef.putFile(file);
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      return null;
-    }
   }
 }
