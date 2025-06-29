@@ -25,6 +25,7 @@ class Certificate {
   final String status; // 'active', 'expired', 'revoked', 'pending'
   final String? signature; // Digital signature or approval signature
   final Map<String, dynamic>? metadata; // Additional flexible data
+  final String? firebaseUrl;
 
   Certificate({
     this.id,
@@ -50,6 +51,7 @@ class Certificate {
     required this.status,
     this.signature,
     this.metadata,
+    this.firebaseUrl,
   });
 
   Certificate copyWith({
@@ -76,6 +78,7 @@ class Certificate {
     String? status,
     String? signature,
     Map<String, dynamic>? metadata,
+    String? firebaseUrl,
   }) {
     return Certificate(
       id: id ?? this.id,
@@ -101,6 +104,7 @@ class Certificate {
       status: status ?? this.status,
       signature: signature ?? this.signature,
       metadata: metadata ?? this.metadata,
+      firebaseUrl: firebaseUrl ?? this.firebaseUrl,
     );
   }
 
@@ -128,6 +132,7 @@ class Certificate {
       'status': status,
       'signature': signature,
       'metadata': metadata,
+      'firebaseUrl': firebaseUrl,
     };
   }
 
@@ -160,7 +165,18 @@ class Certificate {
       metadata: map['metadata'] != null
           ? Map<String, dynamic>.from(map['metadata'])
           : null,
+      firebaseUrl: map['firebaseUrl'],
     );
+  }
+
+  // Helper methods
+  bool get isExpired {
+    if (expiryDate == null) return false;
+    return DateTime.now().isAfter(expiryDate!);
+  }
+
+  bool get isActive {
+    return status == 'active' && !isExpired;
   }
 
   // Helper methods
