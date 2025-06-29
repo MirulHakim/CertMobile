@@ -50,7 +50,7 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
 
   Future<void> _pickFile() async {
     setState(() => _isUploading = true);
-    
+
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -115,11 +115,12 @@ Type: $_selectedType
 Issue Date: ${_issueDate?.toString().split(' ')[0] ?? 'Not specified'}
 Expiry Date: ${_expiryDate?.toString().split(' ')[0] ?? 'Not specified'}
 ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text' : ''}
-      '''.trim();
+      '''
+          .trim();
 
       // Add certificate using the service
       final certificate = await _certificateService.addCertificate();
-      
+
       if (certificate != null) {
         // Update the certificate with form data
         final updatedCertificate = certificate.copyWith(
@@ -127,9 +128,9 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
           description: description,
           category: _selectedType,
         );
-        
+
         await _certificateService.updateCertificate(updatedCertificate);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -437,7 +438,8 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(
