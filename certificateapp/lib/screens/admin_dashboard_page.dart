@@ -7,6 +7,8 @@ import 'dart:io';
 import '../services/certificate_service.dart';
 import '../models/certificate.dart';
 import 'certificate_form_page.dart';
+import 'welcome_page.dart';
+import '../services/admin_auth_service.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -17,12 +19,59 @@ class AdminDashboardPage extends StatefulWidget {
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final CertificateService _certificateService = CertificateService();
+  final AdminAuthService _adminAuthService = AdminAuthService();
   List<Certificate> _certificates = [];
   Map<String, dynamic> _stats = {};
   bool _isLoading = true;
   String _searchQuery = '';
   String _filterType = 'all';
   String _filterStatus = 'all';
+
+  // Admin monitoring data
+  Map<String, dynamic> _adminMonitoringData = {
+    'activeUsers': 0,
+    'recentActivities': [],
+    'systemHealth': 'Good',
+    'lastBackup': DateTime.now().subtract(const Duration(hours: 2)),
+  };
+
+  // CA Verification data
+  List<Map<String, dynamic>> _caVerificationData = [
+    {
+      'certId': 'CERT-2401-1234',
+      'status': 'Verified',
+      'verificationDate': DateTime.now().subtract(const Duration(days: 1)),
+      'verifiedBy': 'Admin User',
+    },
+    {
+      'certId': 'CERT-2401-1235',
+      'status': 'Pending',
+      'verificationDate': null,
+      'verifiedBy': null,
+    },
+  ];
+
+  // Metadata rules
+  List<Map<String, dynamic>> _metadataRules = [
+    {
+      'ruleName': 'Certificate Name Validation',
+      'description': 'Certificate names must be alphanumeric and 3-50 characters',
+      'enabled': true,
+      'severity': 'High',
+    },
+    {
+      'ruleName': 'File Size Limit',
+      'description': 'Certificate files must be under 10MB',
+      'enabled': true,
+      'severity': 'Medium',
+    },
+    {
+      'ruleName': 'Expiry Date Validation',
+      'description': 'Expiry dates must be in the future',
+      'enabled': true,
+      'severity': 'High',
+    },
+  ];
 
   @override
   void initState() {
@@ -45,6 +94,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       debugPrint('Error loading admin dashboard data: $e');
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    try {
+      await _adminAuthService.signOutAdmin();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WelcomePage(),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error during logout: $e');
     }
   }
 
@@ -86,6 +152,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
           ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _handleLogout,
+          ),
         ],
       ),
       body: _isLoading
@@ -99,6 +169,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   children: [
                     // Statistics Cards
                     _buildStatsCards(),
+                    const SizedBox(height: 24),
+
+                    // Admin Features Section
+                    _buildAdminFeaturesSection(),
                     const SizedBox(height: 24),
 
                     // Search and Filters
@@ -196,6 +270,91 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               textAlign: TextAlign.center,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminFeaturesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Administrative Features',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildFeatureCard(
+                'CA Verification',
+                Icons.verified_user,
+                Colors.blue,
+                '${_caVerificationData.length} certificates',
+                () => _showCAVerificationDialog(),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildFeatureCard(
+                'Admin Monitoring',
+                Icons.monitor,
+                Colors.green,
+                '${_adminMonitoringData['activeUsers']} active users',
+                () => _showAdminMonitoringDialog(),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildFeatureCard(
+                'Metadata Rules',
+                Icons.rule,
+                Colors.orange,
+                '${_metadataRules.length} active rules',
+                () => _showMetadataRulesDialog(),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureCard(String title, IconData icon, Color color, String subtitle, VoidCallback onTap) {
+    return Card(
+      elevation: 4,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(icon, size: 32, color: color),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -654,6 +813,157 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         );
       }
+    }
+  }
+
+  void _showCAVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('CA Verification'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Certificate Authority Verification Status'),
+              const SizedBox(height: 16),
+              ..._caVerificationData.map((cert) => Card(
+                child: ListTile(
+                  title: Text(cert['certId']),
+                  subtitle: Text('Status: ${cert['status']}'),
+                  trailing: Icon(
+                    cert['status'] == 'Verified' ? Icons.check_circle : Icons.pending,
+                    color: cert['status'] == 'Verified' ? Colors.green : Colors.orange,
+                  ),
+                ),
+              )).toList(),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAdminMonitoringDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Admin Monitoring'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildMonitoringItem('Active Users', '${_adminMonitoringData['activeUsers']}'),
+              _buildMonitoringItem('System Health', _adminMonitoringData['systemHealth']),
+              _buildMonitoringItem('Last Backup', _formatDateTime(_adminMonitoringData['lastBackup'])),
+              const SizedBox(height: 16),
+              const Text('Recent Activities', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('No recent activities to display'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMetadataRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Metadata Rules'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Active Metadata Validation Rules'),
+              const SizedBox(height: 16),
+              ..._metadataRules.map((rule) => Card(
+                child: ListTile(
+                  title: Text(rule['ruleName']),
+                  subtitle: Text(rule['description']),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getSeverityColor(rule['severity']),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          rule['severity'],
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Switch(
+                        value: rule['enabled'],
+                        onChanged: (value) {
+                          setState(() {
+                            rule['enabled'] = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              )).toList(),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonitoringItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute}';
+  }
+
+  Color _getSeverityColor(String severity) {
+    switch (severity.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+        return Colors.green;
+      default:
+        return Colors.grey;
     }
   }
 }
