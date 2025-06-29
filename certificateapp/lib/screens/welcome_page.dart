@@ -3,8 +3,13 @@ import '../services/google_auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'google_registration_page.dart';
+
+import 'package:flutter/foundation.dart';
+import 'recipient_dashboard_page.dart';
+
 import 'admin_dashboard_page.dart';
 import 'admin_login_page.dart';
+
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({Key? key}) : super(key: key);
@@ -329,6 +334,31 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // DEV SHORTCUT BUTTON (only in debug mode)
+                if (kDebugMode)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        minimumSize: const Size(220, 48),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const RecipientDashboardPage()),
+                        );
+                      },
+                      child: const Text('Dev Shortcut Login'),
+                    ),
+                  ),
+
                 // Admin Dashboard Access Button
                 Container(
                   width: 320,
@@ -380,6 +410,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
                 // Alternative options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -407,7 +438,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-<<<<<<< HEAD
+
                 // Temporary debug button
                 TextButton(
                   onPressed: () {
@@ -448,8 +479,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
                 const SizedBox(height: 60),
-=======
->>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
+
                 // Features section
                 Container(
                   padding: const EdgeInsets.all(24),
