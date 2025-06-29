@@ -60,7 +60,6 @@ dependencies:
   url_launcher: ^6.2.6
   dio: ^5.4.0
   open_file: ^3.3.2
-  firebase_storage: ^12.4.7
 
   # Added from the code block
   read_pdf_text: ^0.3.1
