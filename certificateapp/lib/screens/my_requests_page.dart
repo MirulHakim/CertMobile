@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/certificate_request_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MyRequestsPage extends StatefulWidget {
   const MyRequestsPage({super.key});
@@ -19,7 +22,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
   @override
   void initState() {
     super.initState();
-    _loadRequests();
+    _setupRealtimeListener();
   }
 
   Future<void> _loadRequests() async {
@@ -28,13 +31,58 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
     try {
       final user = _authService.currentUser;
       if (user != null) {
-        _requests = _certificateRequestService.getRequestsByUser(user.uid);
+        _requests =
+            await _certificateRequestService.getRequestsByUser(user.uid);
       } else {
         _requests = [];
       }
     } catch (e) {
       print('Error loading requests: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading requests: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  // Set up real-time listener for requests
+  void _setupRealtimeListener() {
+    final user = _authService.currentUser;
+    if (user != null) {
+      print('Setting up real-time listener for user: ${user.uid}');
+      _certificateRequestService.getUserRequestsStream(user.uid).listen(
+        (requests) {
+          print('Received ${requests.length} requests from Firebase');
+          if (mounted) {
+            setState(() {
+              _requests = requests;
+              _isLoading = false;
+            });
+          }
+        },
+        onError: (error) {
+          print('Error in real-time listener: $error');
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error loading requests: $error'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      );
+    } else {
+      print('No user found, cannot set up real-time listener');
       setState(() => _isLoading = false);
     }
   }
@@ -69,6 +117,42 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
     }
   }
 
+  // Manual refresh method
+  Future<void> _manualRefresh() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final user = _authService.currentUser;
+      if (user != null) {
+        // Force refresh by getting data directly
+        final requests =
+            await _certificateRequestService.getRequestsByUser(user.uid);
+        if (mounted) {
+          setState(() {
+            _requests = requests;
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _requests = [];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error refreshing requests: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error refreshing requests: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,14 +164,14 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadRequests,
+            onPressed: _manualRefresh,
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _loadRequests,
+              onRefresh: _manualRefresh,
               child: _requests.isEmpty
                   ? const Center(
                       child: Column(
@@ -172,6 +256,27 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
                                 Text(
                                   'Requested: ${_formatDate(request['requestedAt'])}',
                                 ),
+                                if (request['fileUrl'] != null) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.attach_file,
+                                        size: 14,
+                                        color: Colors.blue,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'File attached',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.blue[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ],
                             ),
                             trailing: Container(
@@ -224,12 +329,20 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
   }
 
   String _formatDate(dynamic date) {
+    if (date == null) return 'Unknown';
+
     if (date is String) {
       // Handle ISO string format
-      final dateTime = DateTime.parse(date);
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      try {
+        final dateTime = DateTime.parse(date);
+        return DateFormat('dd/MM/yyyy HH:mm').format(dateTime);
+      } catch (e) {
+        return 'Invalid date';
+      }
     } else if (date is DateTime) {
-      return '${date.day}/${date.month}/${date.year}';
+      return DateFormat('dd/MM/yyyy HH:mm').format(date);
+    } else if (date is Timestamp) {
+      return DateFormat('dd/MM/yyyy HH:mm').format(date.toDate());
     }
     return 'Unknown';
   }
@@ -239,24 +352,84 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(request['certName']),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Request ID: ${request['id']}'),
-            const SizedBox(height: 8),
-            Text('Certificate Type: ${request['certificateType']}'),
-            const SizedBox(height: 8),
-            Text('Priority: ${request['priority']}'),
-            const SizedBox(height: 8),
-            Text('Status: ${_getStatusText(request['status'])}'),
-            const SizedBox(height: 8),
-            Text('Reason: ${request['reason']}'),
-            const SizedBox(height: 8),
-            Text('Requested: ${_formatDate(request['requestedAt'])}'),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Request ID: ${request['id']}'),
+              const SizedBox(height: 8),
+              Text('Certificate Type: ${request['certificateType']}'),
+              const SizedBox(height: 8),
+              Text('Issuer: ${request['issuer'] ?? 'Not specified'}'),
+              const SizedBox(height: 8),
+              Text('Recipient: ${request['recipientName']}'),
+              const SizedBox(height: 8),
+              Text('Priority: ${request['priority']}'),
+              const SizedBox(height: 8),
+              Text('Status: ${_getStatusText(request['status'])}'),
+              const SizedBox(height: 8),
+              Text('Reason: ${request['reason']}'),
+              if (request['description'] != null &&
+                  request['description'].isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text('Description: ${request['description']}'),
+              ],
+              if (request['additionalInfo'] != null &&
+                  request['additionalInfo'].isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text('Additional Info: ${request['additionalInfo']}'),
+              ],
+              const SizedBox(height: 8),
+              Text('Requested: ${_formatDate(request['requestedAt'])}'),
+              if (request['fileUrl'] != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.attach_file,
+                              color: Colors.blue, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Attached File',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        request['fileName'] ?? 'Unknown file',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
         actions: [
+          if (request['fileUrl'] != null)
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _downloadFile(request['fileUrl'], request['fileName']);
+              },
+              icon: const Icon(Icons.download),
+              label: const Text('Download File'),
+            ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
@@ -264,5 +437,35 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _downloadFile(String? fileUrl, String? fileName) async {
+    if (fileUrl == null || fileName == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No file available for download'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final uri = Uri.parse(fileUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception('Could not launch URL');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

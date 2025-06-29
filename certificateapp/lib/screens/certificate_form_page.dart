@@ -204,7 +204,6 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
     setState(() => _isSaving = true);
 
     try {
-<<<<<<< HEAD
       // Upload file to Firebase Storage
       final firebaseResult = await _certificateService.uploadFileToFirebase(
           _selectedFile!, _filePath!);
@@ -224,8 +223,6 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
       '''
           .trim();
 
-=======
->>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
       final certificate = await _certificateService.createCertificate(
         certName: _certNameController.text.trim(),
         issuer: _issuerController.text.trim(),
@@ -251,7 +248,6 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
       );
 
       if (certificate != null) {
-<<<<<<< HEAD
         final updatedCertificate = certificate.copyWith(
           fileName: _certNameController.text,
           description: description,
@@ -259,8 +255,6 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
 
         await _certificateService.updateCertificate(updatedCertificate);
 
-=======
->>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -304,7 +298,7 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
         (t) => t.toLowerCase() == type,
         orElse: () => '',
       );
-      if (match != null) {
+      if (match != '') {
         _selectedType = match;
       }
     }
