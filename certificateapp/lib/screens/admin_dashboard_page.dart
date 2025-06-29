@@ -7,6 +7,7 @@ import 'dart:io';
 import '../services/certificate_service.dart';
 import '../models/certificate.dart';
 import 'certificate_form_page.dart';
+import 'profile_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -42,7 +43,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _stats = stats;
       });
     } catch (e) {
-      debugPrint('Error loading admin dashboard data: $e');
+      // debugPrint('Error loading admin dashboard data: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -85,6 +86,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+            },
           ),
         ],
       ),
@@ -137,7 +147,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.2,
       children: [
         _buildStatCard(
           'Total Certificates',

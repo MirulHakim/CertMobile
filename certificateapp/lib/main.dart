@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Digital Certificate Directory',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -60,9 +61,6 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        debugPrint(
-            'AuthWrapper: Stream state - connectionState: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, user: ${snapshot.data?.email}');
-
         // Waiting for Firebase to load user
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -72,12 +70,10 @@ class AuthWrapper extends StatelessWidget {
 
         // If user is signed in
         if (snapshot.hasData && snapshot.data != null) {
-          debugPrint('AuthWrapper: User signed in, showing HomePage');
           return const HomePage(); // This will be our main page that handles user routing
         }
 
         // If no user is signed in
-        debugPrint('AuthWrapper: No user signed in, showing WelcomePage');
         return const WelcomePage();
       },
     );
@@ -108,10 +104,8 @@ class _HomePageState extends State<HomePage> {
       setState(() => _isLoading = true);
 
       _currentUser = FirebaseAuth.instance.currentUser;
-      debugPrint('HomePage: Current user: ${_currentUser?.email}');
 
       if (_currentUser == null) {
-        debugPrint('HomePage: No user found, signing out');
         await FirebaseAuth.instance.signOut();
         return;
       }
@@ -123,7 +117,6 @@ class _HomePageState extends State<HomePage> {
           .get();
 
       if (!doc.exists) {
-        debugPrint('HomePage: User document does not exist, signing out');
         await FirebaseAuth.instance.signOut();
         return;
       }
@@ -133,12 +126,8 @@ class _HomePageState extends State<HomePage> {
           _userData!['registrationCompleted'] ?? false;
       final role = _userData!['role']?.toString().toLowerCase();
 
-      debugPrint(
-          'HomePage: User data - registrationCompleted: $registrationCompleted, role: $role');
-
       // If Google user hasn't completed registration, show registration page
       if (!registrationCompleted && _userData!['authProvider'] == 'google') {
-        debugPrint('HomePage: User needs to complete registration');
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -151,14 +140,10 @@ class _HomePageState extends State<HomePage> {
 
       // If user has no role, sign out
       if (role == null || role.isEmpty) {
-        debugPrint('HomePage: User has no role, signing out');
         await FirebaseAuth.instance.signOut();
         return;
       }
-
-      debugPrint('HomePage: User data loaded successfully');
     } catch (e) {
-      debugPrint('HomePage: Error loading user data: $e');
       await FirebaseAuth.instance.signOut();
     } finally {
       if (mounted) {
@@ -180,7 +165,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     final role = _userData!['role']?.toString().toLowerCase();
-    debugPrint('HomePage: Building dashboard for role: $role');
 
     // Route based on role
     if (role == 'recipients') {
@@ -189,8 +173,8 @@ class _HomePageState extends State<HomePage> {
       return const CADashboardPage();
     } else if (role == 'client') {
       return const ClientDashboardPage();
-      } else if (role == 'admin') {
-        return const AdminDashboardPage();
+    } else if (role == 'admin') {
+      return const AdminDashboardPage();
     } else {
       return const RecipientDashboardPage(); // Default to recipient dashboard
     }
