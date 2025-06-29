@@ -75,8 +75,6 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
       });
 
       try {
-        debugPrint('Completing Google user registration...');
-
         // Create user profile in Firestore with role information
         await _firestore.collection('users').doc(widget.user.uid).set({
           'uid': widget.user.uid,
@@ -100,8 +98,6 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
           'registrationCompleted': true,
         });
 
-        debugPrint('Google user registration completed successfully');
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -123,7 +119,6 @@ class _GoogleRegistrationPageState extends State<GoogleRegistrationPage> {
           }
         }
       } catch (e) {
-        debugPrint('Registration error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

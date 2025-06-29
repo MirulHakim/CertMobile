@@ -26,10 +26,8 @@ class FirebaseStorageService {
       // Get the download URL
       final downloadUrl = await snapshot.ref.getDownloadURL();
 
-      debugPrint('File uploaded successfully: $downloadUrl');
       return downloadUrl;
     } catch (e) {
-      debugPrint('Error uploading file to Firebase Storage: $e');
       return null;
     }
   }
@@ -43,10 +41,8 @@ class FirebaseStorageService {
       // Delete the file
       await ref.delete();
 
-      debugPrint('File deleted successfully from Firebase Storage');
       return true;
     } catch (e) {
-      debugPrint('Error deleting file from Firebase Storage: $e');
       return false;
     }
   }
@@ -65,7 +61,6 @@ class FirebaseStorageService {
         'updated': metadata.updated,
       };
     } catch (e) {
-      debugPrint('Error getting file metadata: $e');
       return null;
     }
   }

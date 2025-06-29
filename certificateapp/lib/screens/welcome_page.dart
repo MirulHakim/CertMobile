@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/google_auth_service.dart';
-import 'debug_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'google_registration_page.dart';
@@ -23,10 +22,9 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   Future<void> _checkAuthState() async {
-    // Check if user is already signed in
     try {
       final isSignedIn = await _googleAuthService.isSignedIn();
-      print('WelcomePage - User already signed in with Google: $isSignedIn');
+      print('WelcomePage - Is signed in with Google: $isSignedIn');
 
       if (isSignedIn) {
         // User is already signed in, let AuthWrapper handle navigation
@@ -40,13 +38,19 @@ class _WelcomePageState extends State<WelcomePage> {
 
   Future<void> _handleGoogleRegister() async {
     setState(() => _isGoogleSigningIn = true);
+
     try {
+      print('WelcomePage: Starting Google Sign-In...');
       final userCredential = await _googleAuthService.signInWithGoogle();
-      if (userCredential != null) {
+
+      if (userCredential != null && userCredential.user != null) {
+        final user = userCredential.user!;
+        print('WelcomePage: Google Sign-In successful for ${user.email}');
+
         // Check if user already exists in Firestore
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
-            .doc(userCredential.user!.uid)
+            .doc(user.uid)
             .get();
 
         if (userDoc.exists) {
@@ -56,134 +60,58 @@ class _WelcomePageState extends State<WelcomePage> {
           final role = userData['role'];
 
           if (registrationCompleted && role != null) {
-            // Account already registered and completed
+            // Account already registered and completed - AuthWrapper will handle navigation
+            print(
+                'WelcomePage: User login successful, AuthWrapper will navigate');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Account already exists, please sign in.'),
-                  backgroundColor: Colors.orange,
+                  content: Text('Signed in successfully!'),
+                  backgroundColor: Colors.green,
                 ),
               );
-              await FirebaseAuth.instance.signOut();
             }
           } else {
             // User exists but needs to complete registration
+            print('WelcomePage: User needs to complete registration');
             if (mounted) {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      GoogleRegistrationPage(user: userCredential.user!),
+                  builder: (context) => GoogleRegistrationPage(user: user),
                 ),
               );
             }
           }
         } else {
           // New user, show registration form
+          print('WelcomePage: New user, showing registration form');
           if (mounted) {
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    GoogleRegistrationPage(user: userCredential.user!),
+                builder: (context) => GoogleRegistrationPage(user: user),
               ),
             );
           }
         }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google registration failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isGoogleSigningIn = false);
-    }
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isGoogleSigningIn = true);
-    try {
-      final userCredential = await _googleAuthService.signInWithGoogle();
-      if (userCredential != null) {
-        // Check if user is registered
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .get();
-
-        if (userDoc.exists) {
-          final userData = userDoc.data()!;
-          final registrationCompleted =
-              userData['registrationCompleted'] ?? false;
-          final role = userData['role'];
-
-          if (registrationCompleted && role != null) {
-            // Registered and completed, let AuthWrapper show HomePage
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Signed in with Google!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            }
-          } else {
-            // Not completed registration, show error and sign out
-            if (mounted) {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Account Not Registered'),
-                  content: const Text(
-                    'This Google account is not registered in our system. Please use the "Continue with Google" button above to register your account.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-              );
-              await FirebaseAuth.instance.signOut();
-            }
-          }
-        } else {
-          // Not registered, show error and sign out
-          if (mounted) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Account Not Registered'),
-                content: const Text(
-                  'This Google account is not registered in our system. Please use the "Continue with Google" button above to register your account.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
-            );
-            await FirebaseAuth.instance.signOut();
-          }
+      } else {
+        print('WelcomePage: Google Sign-In was cancelled or failed');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sign-in was cancelled'),
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
       }
     } catch (e) {
+      print('WelcomePage: Google Sign-In error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google Sign-In failed: $e'),
+            content: Text('Sign-in failed: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -355,26 +283,6 @@ class _WelcomePageState extends State<WelcomePage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Temporary debug button
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DebugPage(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Debug Google Sign-In',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 60),
                 // Features section
                 Container(
                   padding: const EdgeInsets.all(24),
