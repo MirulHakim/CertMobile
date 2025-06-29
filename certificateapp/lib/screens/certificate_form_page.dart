@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/certificate_service.dart';
 import '../models/certificate.dart';
+import 'package:read_pdf_text/read_pdf_text.dart';
+import 'package:intl/intl.dart';
 
 class CertificateFormPage extends StatefulWidget {
   const CertificateFormPage({super.key});
@@ -45,6 +47,10 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
     'Other',
   ];
 
+  final certificateNameController = TextEditingController();
+  final certificateTypeController = TextEditingController();
+  final expiryDateController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +85,9 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
         setState(() {
           _selectedFile = file;
         });
+
+        final data = await extractCertificateData(path);
+        autofillForm(data);
       }
     } catch (e) {
       if (mounted) {
@@ -247,6 +256,41 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
     }
   }
 
+  void autofillForm(Map<String, String> data) {
+    _certNameController.text = data['certificate name'] ?? '';
+    _issuerController.text = data['issuer'] ?? '';
+    _recipientController.text = data['recipient'] ?? '';
+    _descriptionController.text = data['description'] ?? '';
+    _additionalInfoController.text = data['additional information'] ?? '';
+
+    // Certificate Type (dropdown)
+    if (data['certificate type'] != null) {
+      final type = data['certificate type']!.trim().toLowerCase();
+      final match = _certificateTypes.firstWhere(
+        (t) => t.toLowerCase() == type,
+        orElse: () => '',
+      );
+      if (match != null) {
+        _selectedType = match;
+      }
+    }
+
+    // Expiry Date (DateTime)
+    if (data['expiry date'] != null && data['expiry date']!.isNotEmpty) {
+      try {
+        _expiryDate = DateFormat('dd/MM/yyyy').parse(data['expiry date']!);
+      } catch (_) {
+        try {
+          _expiryDate = DateFormat('yyyy-MM-dd').parse(data['expiry date']!);
+        } catch (_) {
+          // Ignore parse error
+        }
+      }
+    }
+
+    setState(() {});
+  }
+
   @override
   void dispose() {
     _certNameController.dispose();
@@ -255,6 +299,9 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
     _descriptionController.dispose();
     _additionalInfoController.dispose();
     _signatureController.dispose();
+    certificateNameController.dispose();
+    certificateTypeController.dispose();
+    expiryDateController.dispose();
     super.dispose();
   }
 
@@ -689,4 +736,33 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
       ),
     );
   }
+}
+
+Future<Map<String, String>> extractCertificateData(String pdfPath) async {
+  final text = await ReadPdfText.getPDFtext(pdfPath);
+  final Map<String, String> data = {};
+
+  // List of supported keys (lowercase, as in the PDF)
+  final supportedKeys = [
+    'certificate name',
+    'certificate type',
+    'issuer',
+    'recipient',
+    'expiry date',
+    'description',
+    'additional information',
+  ];
+
+  final regex = RegExp(r'([a-zA-Z ]+)\s*:\s*(.+)');
+  for (final line in text.split('\n')) {
+    final match = regex.firstMatch(line);
+    if (match != null) {
+      final key = match.group(1)!.trim().toLowerCase();
+      final value = match.group(2)!.trim();
+      if (supportedKeys.contains(key)) {
+        data[key] = value;
+      }
+    }
+  }
+  return data;
 }

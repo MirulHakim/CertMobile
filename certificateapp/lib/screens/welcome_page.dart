@@ -4,6 +4,8 @@ import 'debug_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'google_registration_page.dart';
+import 'package:flutter/foundation.dart';
+import 'recipient_dashboard_page.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({Key? key}) : super(key: key);
@@ -257,6 +259,29 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                // DEV SHORTCUT BUTTON (only in debug mode)
+                if (kDebugMode)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        minimumSize: const Size(220, 48),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const RecipientDashboardPage()),
+                        );
+                      },
+                      child: const Text('Dev Shortcut Login'),
+                    ),
+                  ),
                 // Alternative options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
