@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/google_auth_service.dart';
-import 'debug_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'google_registration_page.dart';
@@ -408,6 +407,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ],
                 ),
                 const SizedBox(height: 16),
+<<<<<<< HEAD
                 // Temporary debug button
                 TextButton(
                   onPressed: () {
@@ -448,6 +448,8 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
                 const SizedBox(height: 60),
+=======
+>>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
                 // Features section
                 Container(
                   padding: const EdgeInsets.all(24),

@@ -9,6 +9,7 @@ import '../models/certificate.dart';
 import 'certificate_form_page.dart';
 import 'welcome_page.dart';
 import '../services/admin_auth_service.dart';
+import 'profile_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -153,6 +154,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             onPressed: _loadData,
           ),
           IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _handleLogout,
           ),
@@ -211,7 +221,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.2,
       children: [
         _buildStatCard(
           'Total Certificates',

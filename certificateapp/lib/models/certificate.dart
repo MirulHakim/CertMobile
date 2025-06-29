@@ -179,6 +179,10 @@ class Certificate {
     return status == 'active' && !isExpired;
   }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
   String get formattedFileSize {
     if (fileSize == null) return 'Unknown';
     if (fileSize! < 1024) {

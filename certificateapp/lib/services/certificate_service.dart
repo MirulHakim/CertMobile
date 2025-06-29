@@ -6,9 +6,12 @@ import '../models/certificate.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
+<<<<<<< HEAD
 import 'package:path/path.dart' as path;
 import 'package:file_picker/file_picker.dart';
 import 'database_helper.dart';
+=======
+>>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
 
 class CertificateService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -515,6 +518,7 @@ class CertificateService {
       // ...add other fields as needed...
     });
   }
+<<<<<<< HEAD
 
   Future<String?> uploadFileToFirebase(File file, String fileName) async {
     try {
@@ -611,4 +615,6 @@ class CertificateService {
     }
     return certDir.path;
   }
+=======
+>>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
 }

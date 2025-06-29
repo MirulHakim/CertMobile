@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import 'certificate_form_page.dart';
 import 'repository_page.dart';
 import 'profile_page.dart';
+import 'true_copy_request_form_page.dart';
 
 class RecipientDashboardPage extends StatefulWidget {
   const RecipientDashboardPage({super.key});
@@ -34,7 +35,7 @@ class _RecipientDashboardPageState extends State<RecipientDashboardPage> {
         _userProfile = await _authService.getUserProfile(user.uid);
       }
     } catch (e) {
-      debugPrint('Error loading Recipient dashboard data: $e');
+      // debugPrint('Error loading Recipient dashboard data: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -184,7 +185,13 @@ class _RecipientDashboardPageState extends State<RecipientDashboardPage> {
                             label: 'Request True Copy',
                             color: Colors.orange,
                             onTap: () {
-                              // TODO: Navigate to Request True Copy page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const TrueCopyRequestFormPage(),
+                                ),
+                              );
                             },
                           ),
                         ),

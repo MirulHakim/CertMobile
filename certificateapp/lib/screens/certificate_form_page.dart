@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/certificate_service.dart';
 import '../models/certificate.dart';
-import 'package:read_pdf_text/read_pdf_text.dart';
 
 class CertificateFormPage extends StatefulWidget {
   const CertificateFormPage({super.key});
@@ -80,23 +79,8 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
           throw Exception('Selected file does not exist.');
         }
         setState(() {
-          _filePath = result.files.single.name;
-          _selectedFile = File(result.files.single.path!);
           _selectedFile = file;
         });
-        // If PDF, extract text and autofill fields
-        if (_filePath != null && _filePath!.toLowerCase().endsWith('.pdf')) {
-          try {
-            String text = await ReadPdfText.getPDFtext(_selectedFile!.path);
-            _autofillFromPdfText(text);
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to extract PDF text: $e')),
-              );
-            }
-          }
-        }
       }
     } catch (e) {
       if (mounted) {
@@ -138,43 +122,6 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
         setState(() => _isUploading = false);
       }
     }
-  }
-
-  void _autofillFromPdfText(String text) {
-    // Simple regex-based extraction for fields like 'Certificate Name:', 'Issuer:', etc.
-    String? getField(String label) {
-      final regex = RegExp('$label\s*:\s*(.*)', caseSensitive: false);
-      final match = regex.firstMatch(text);
-      return match != null ? match.group(1)?.trim() : null;
-    }
-
-    final certName = getField('Certificate Name') ?? getField('Certificate');
-    final issuer = getField('Issuer');
-    final recipient = getField('Recipient');
-    final type = getField('Type');
-    final notes = getField('Notes');
-    final issueDate = getField('Issue Date');
-    final expiryDate = getField('Expiry Date');
-
-    setState(() {
-      if (certName != null && certName.isNotEmpty)
-        _nameController.text = certName;
-      if (issuer != null && issuer.isNotEmpty) _issuerController.text = issuer;
-      if (recipient != null && recipient.isNotEmpty)
-        _recipientController.text = recipient;
-      if (type != null && type.isNotEmpty && _certificateTypes.contains(type))
-        _selectedType = type;
-      if (notes != null && notes.isNotEmpty)
-        _descriptionController.text = notes;
-      if (issueDate != null && issueDate.isNotEmpty) {
-        final parsed = DateTime.tryParse(issueDate);
-        if (parsed != null) _issueDate = parsed;
-      }
-      if (expiryDate != null && expiryDate.isNotEmpty) {
-        final parsed = DateTime.tryParse(expiryDate);
-        if (parsed != null) _expiryDate = parsed;
-      }
-    });
   }
 
   Future<void> _selectDate(BuildContext context, bool isIssueDate) async {
@@ -248,6 +195,7 @@ class _CertificateFormPageState extends State<CertificateFormPage> {
     setState(() => _isSaving = true);
 
     try {
+<<<<<<< HEAD
       // Upload file to Firebase Storage
       final firebaseResult = await _certificateService.uploadFileToFirebase(
           _selectedFile!, _filePath!);
@@ -267,6 +215,8 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
       '''
           .trim();
 
+=======
+>>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
       final certificate = await _certificateService.createCertificate(
         certName: _certNameController.text.trim(),
         issuer: _issuerController.text.trim(),
@@ -292,6 +242,7 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
       );
 
       if (certificate != null) {
+<<<<<<< HEAD
         final updatedCertificate = certificate.copyWith(
           fileName: _certNameController.text,
           description: description,
@@ -299,6 +250,8 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
 
         await _certificateService.updateCertificate(updatedCertificate);
 
+=======
+>>>>>>> bc885683ec3f8500b8202633f1088170f482fd65
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -753,8 +706,7 @@ ${_descriptionController.text.isNotEmpty ? 'Notes: $_descriptionController.text'
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor:
-                                   
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             ),
                             SizedBox(width: 12),
